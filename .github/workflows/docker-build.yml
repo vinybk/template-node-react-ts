@@ -8,12 +8,12 @@ on:
     tags:
       - 'v*.*.*' # Version tags for production builds
   
+env:
+  IMAGE_NAME: viniciusbrun/shared-notes # Docker Hub repository name
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
-    env:
-      IMAGE_NAME: viniciusbrun/shared-notes # Docker Hub repository name
 
     steps:
       - name: Checkout code
@@ -28,43 +28,32 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Development Image
-        if: github.ref == 'refs/heads/develop'
-        run: |
-          # Extract version from main branch's latest tag and add "-dev" for development
-          VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))-dev
-          docker build -t $IMAGE_NAME:$VERSION .
-          docker push $IMAGE_NAME:$VERSION
-
-      - name: Build and Push Production Image
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-        run: |
-          # If triggered by a tag, strip "v" prefix for semantic version
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v};
-          else
-            # Get the latest tag and increment minor version for main (production)
-            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
-          fi
-          docker build -t $IMAGE_NAME:$VERSION .
-          docker push $IMAGE_NAME:$VERSION
-
-      - name: Tag Latest Production Image
-        if: github.ref == 'refs/heads/main'
-        run: |
-          # Tag the latest main branch image as "latest"
-          docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:latest
-
-      - name: Set VERSION for Deployment
+      - name: Set VERSION for Image Tagging
         id: set-version
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
+          elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))-dev
           else
             VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Build and Push Docker Image
+        run: |
+          echo "Building Docker image with tag: $VERSION"
+          docker build -t $IMAGE_NAME:$VERSION .
+          echo "Pushing Docker image: $IMAGE_NAME:$VERSION"
+          docker push $IMAGE_NAME:$VERSION
+
+      - name: Tag Latest for Production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Tagging the latest main branch image as 'latest'"
+          docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest
 
       - name: Set completion output
         id: complete
