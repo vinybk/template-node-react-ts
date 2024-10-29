@@ -51,10 +51,11 @@ jobs:
           echo "Testing SSH connection to ensure configuration is correct..."
           ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "echo 'SSH connection successful'"
 
-      - name: Copy docker-compose.yml and .env to VPS
+      - name: Copy docker-compose.yml and dockerfile to VPS
         run: |
-          echo "Sending docker-compose.yml to the VPS" 
+          echo "Sending docker-compose.yml and dockerfile to the VPS" 
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:$REPO_PATH/
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no client/Dockerfile $DEPLOY_USER@$DEPLOY_HOST:$REPO_PATH/client/
 
       - name: Pull Docker Image and Deploy
         env:
@@ -65,6 +66,8 @@ jobs:
           ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST << EOF
             set -e  # Exit if any command fails
             cd $REPO_PATH
+
+            mkdir client
 
             echo "Logging in to Docker Hub..."
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
