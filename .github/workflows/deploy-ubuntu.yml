@@ -62,11 +62,17 @@ jobs:
           ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "echo 'SSH connection successful'"
 
       - name: Pull Docker Image and Deploy
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "Deploying Docker container on remote server..."
           ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST << EOF
             set -e  # Exit if any command fails
             cd $REPO_PATH
+
+            echo "Logging in to Docker Hub..."
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
             echo "Pulling latest Docker image: $IMAGE_NAME:$VERSION"
             docker pull $IMAGE_NAME:$VERSION
