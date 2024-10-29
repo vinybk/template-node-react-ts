@@ -55,7 +55,6 @@ jobs:
         run: |
           echo "Sending docker-compose.yml and dockerfile to the VPS" 
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:$REPO_PATH/
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no client/Dockerfile $DEPLOY_USER@$DEPLOY_HOST:$REPO_PATH/client/
 
       - name: Pull Docker Image and Deploy
         env:
