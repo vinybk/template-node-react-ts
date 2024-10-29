@@ -52,19 +52,19 @@ jobs:
 
           # Set up ssh-agent with passphrase
           echo "Setting up ssh-agent with passphrase..."
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          eval "$(ssh-agent -s)"  # Start ssh-agent and set environment variables
           echo "echo $SSH_PASSPHRASE" > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
           DISPLAY=:0 SSH_ASKPASS=~/.ssh_askpass ssh-add ~/.ssh/id_rsa < /dev/null
           
       - name: Test SSH Connection
         run: |
           echo "Testing SSH connection to ensure configuration is correct..."
-          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "echo 'SSH connection successful'"
+          ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "echo 'SSH connection successful'"
 
       - name: Pull Docker Image and Deploy
         run: |
           echo "Deploying Docker container on remote server..."
-          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST << EOF
+          ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST << EOF
             set -e  # Exit if any command fails
             cd $REPO_PATH
 
