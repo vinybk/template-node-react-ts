@@ -72,6 +72,10 @@ jobs:
 
             echo "Starting updated Docker Compose services..."
             docker-compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
+
+            echo "Cleaning docker credentials..."
+            docker logout
+            
             echo "Deployment complete."
           EOF
 
