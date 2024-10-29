@@ -6,7 +6,6 @@ on:
     types:
       - completed  # Run only when "Docker Build" workflow is completed successfully
 
-
 env:
   DEPLOY_HOST: "sharednotes.app"
   DEPLOY_USER: "ubuntu"
@@ -22,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history and tags
 
       - name: Set VERSION for Deployment
         id: set-version
@@ -29,7 +30,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "0.0.0")
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
         shell: bash
