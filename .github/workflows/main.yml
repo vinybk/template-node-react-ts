@@ -1,4 +1,4 @@
-name: Docker Build and Deploy
+name: Docker Build
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
       - main     # Trigger for production builds
     tags:
       - 'v*.*.*' # Version tags for production builds
-
+  
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_NAME: your-username/your-repo  # Docker Hub repository name
+      IMAGE_NAME: viniciusbrun/shared-notes # Docker Hub repository name
 
     steps:
       - name: Checkout code
@@ -55,3 +55,20 @@ jobs:
           # Tag the latest main branch image as "latest"
           docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
           docker push $IMAGE_NAME:latest
+
+      - name: Set VERSION for Deployment
+        id: set-version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set completion output
+        id: complete
+        run: echo "::set-output name=dockerbuild_done::true"
+
+    outputs:
+      dockerbuild_done: ${{ steps.complete.outputs.dockerbuild_done }}
