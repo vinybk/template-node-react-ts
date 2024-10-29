@@ -35,23 +35,27 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
         shell: bash
 
-      - name: Setup SSH and Add Host
+      - name: Setup SSH with Passphrase
+        env:
+          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           echo "Setting up SSH directory and permissions..."
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
           echo "Adding deploy host to known_hosts..."
           ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Configure Git Safe Directory on Remote
-        run: |
-          echo "Configuring Git safe directory on remote server..."
-          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "git config --global --add safe.directory $REPO_PATH"
-
+          # Set up ssh-agent with passphrase
+          echo "Setting up ssh-agent with passphrase..."
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          echo "echo $SSH_PASSPHRASE" > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
+          DISPLAY=:0 SSH_ASKPASS=~/.ssh_askpass ssh-add ~/.ssh/id_rsa < /dev/null
+          
       - name: Test SSH Connection
         run: |
           echo "Testing SSH connection to ensure configuration is correct..."
@@ -80,4 +84,5 @@ jobs:
         run: |
           echo "Cleaning up SSH keys and known_hosts for security..."
           rm -f ~/.ssh/id_rsa
+          rm -f ~/.ssh_askpass
           rm -f ~/.ssh/known_hosts
