@@ -1,9 +1,7 @@
 services:
   client:
-    build: ./client
+    image: viniciusbrun/shared-notes:latest
     ports:
       - "5173:5173"
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    command: npm run dev  # Ensure it runs in development mode
+    environment:
+      - NODE_ENV=production 
