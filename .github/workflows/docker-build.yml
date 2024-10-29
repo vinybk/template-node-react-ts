@@ -34,9 +34,9 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
-            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))-dev
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "0.0.0")-dev
           else
-            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "0.0.0")
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
         shell: bash
@@ -55,9 +55,5 @@ jobs:
           docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
           docker push $IMAGE_NAME:latest
 
-      - name: Set completion output
-        id: complete
-        run: echo "::set-output name=dockerbuild_done::true"
-
     outputs:
-      dockerbuild_done: ${{ steps.complete.outputs.dockerbuild_done }}
+      dockerbuild_done: true  # Static output since it completes successfully
