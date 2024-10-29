@@ -53,8 +53,16 @@ jobs:
           # Set up ssh-agent with passphrase
           echo "Setting up ssh-agent with passphrase..."
           eval "$(ssh-agent -s)"  # Start ssh-agent and set environment variables
+
+          # Create a temporary askpass script to provide the passphrase
           echo "echo $SSH_PASSPHRASE" > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
+          
+          # Use SSH_ASKPASS to add the SSH key non-interactively
           DISPLAY=:0 SSH_ASKPASS=~/.ssh_askpass ssh-add ~/.ssh/id_rsa < /dev/null
+          
+          # Clean up the temporary askpass script for security
+          rm -f ~/.ssh_askpass
+
           
       - name: Test SSH Connection
         run: |
