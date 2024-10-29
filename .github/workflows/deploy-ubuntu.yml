@@ -1,54 +1,79 @@
-name: Deploy to Ubuntu VM
+name: Deploy to VM
 
 on:
   push:
     branches:
-      - main
-      
-  workflow_run:
-    workflows: ["Docker Build"]
-    types:
-      - completed
-
+      - main  # Define target branches
 
 env:
-  SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+  DEPLOY_HOST: "sharednotes.app"
+  DEPLOY_USER: "ubuntu"
+  REPO_PATH: "/home/ubuntu/shared-notes"
+  DOCKER_COMPOSE_FILE: "docker-compose.yml"
+  IMAGE_NAME: "viniciusbrun/shared-notes"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Create .ssh directory
-      run: |
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
+      - name: Set VERSION for Deployment
+        id: set-version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        shell: bash
 
-    - name: Add sharednotes.app to known_hosts
-      run: |
-        ssh-keyscan -H sharednotes.app >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
+      - name: Setup SSH and Add Host
+        run: |
+          echo "Setting up SSH directory and permissions..."
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-    - name: Setup SSH with passphrase
-      env:
-        SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      run: |
-        ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-        echo "echo $SSH_PASSPHRASE" > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
-        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | DISPLAY=None SSH_ASKPASS=~/.ssh_askpass ssh-add - >/dev/null
+          echo "Adding deploy host to known_hosts..."
+          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-    - name: Configure Git Safe Directory
-      run: |
-        ssh ubuntu@sharednotes.app "git config --global --add safe.directory /var/www/virtual-study-group"
+      - name: Configure Git Safe Directory on Remote
+        run: |
+          echo "Configuring Git safe directory on remote server..."
+          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "git config --global --add safe.directory $REPO_PATH"
 
-    - name: Test SSH connection
-      run: |
-        ssh ubuntu@sharednotes.app "echo SSH connection successful"
+      - name: Test SSH Connection
+        run: |
+          echo "Testing SSH connection to ensure configuration is correct..."
+          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "echo 'SSH connection successful'"
 
-    - name: Deploy to VM
-      run: |
-        ssh ubuntu@sharednotes.app "cd /var/www/virtual-study-group && git pull && npm ci && npm run build && pm2 reload all || exit 1"
+      - name: Pull Docker Image and Deploy
+        run: |
+          echo "Deploying Docker container on remote server..."
+          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST << EOF
+            set -e  # Exit if any command fails
+            cd $REPO_PATH
+
+            echo "Pulling latest Docker image: $IMAGE_NAME:$VERSION"
+            docker pull $IMAGE_NAME:$VERSION
+
+            echo "Stopping current Docker Compose services..."
+            docker-compose -f $DOCKER_COMPOSE_FILE down || echo "No containers to stop, skipping..."
+
+            echo "Starting updated Docker Compose services..."
+            docker-compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
+            echo "Deployment complete."
+          EOF
+
+      - name: Clean Up Local SSH Keys
+        if: always()
+        run: |
+          echo "Cleaning up SSH keys and known_hosts for security..."
+          rm -f ~/.ssh/id_rsa
+          rm -f ~/.ssh/known_hosts
