@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+    "esModuleInterop": true,
+    "types": [
+      "node",
+      "jest",
+    ],
+    "jsx": "react-jsx",
+    }
+}
