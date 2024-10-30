@@ -1,8 +1,25 @@
 # Dockerfile
-FROM node:20
 
+# Stage 1: Build the application
+FROM node:20 AS build
+
+# Set working directory
 WORKDIR /app
-COPY . .
+
+# Install dependencies and build the app
+COPY package*.json ./
 RUN npm install
-EXPOSE 5173
-CMD ["npm", "run", "dev"]
+COPY . .
+RUN npm run build  # Assumes build files are generated in /app/dist or /app/build
+
+# Stage 2: Serve the built app with Nginx
+FROM nginx:alpine
+
+# Copy built files from the previous stage
+COPY --from=build /app/public /usr/share/nginx/html
+
+# Expose Nginx's default HTTP port
+EXPOSE 80
+
+# Run Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]

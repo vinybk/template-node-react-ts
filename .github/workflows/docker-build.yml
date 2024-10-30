@@ -34,9 +34,9 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
-            VERSION=$(git describe --tags $(git describe --tags $(git rev-list --tags --max-count=1)) 2>/dev/null || echo "0.0.0")-dev
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "0.0.0")-dev
           else
-            VERSION=$(git describe --tags $(git describe --tags $(git rev-list --tags --max-count=1)) 2>/dev/null || echo "0.0.0")
+            VERSION=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "0.0.0")
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
         shell: bash
@@ -44,7 +44,13 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           echo "Building Docker image with tag: $VERSION"
-          docker build -t $IMAGE_NAME:$VERSION -f ./client/Dockerfile ./client
+          if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+            echo "Using Dockerfile.dev for development build"
+            docker build -t $IMAGE_NAME:$VERSION -f ./client/Dockerfile.dev ./client
+          else
+            echo "Using Dockerfile for production build"
+            docker build -t $IMAGE_NAME:$VERSION -f ./client/Dockerfile ./client
+          fi
           echo "Pushing Docker image: $IMAGE_NAME:$VERSION"
           docker push $IMAGE_NAME:$VERSION
 
