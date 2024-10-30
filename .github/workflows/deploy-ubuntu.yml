@@ -54,8 +54,7 @@ jobs:
       - name: Copy docker-compose.yml and dockerfile to VPS
         run: |
           echo "Sending docker-compose.yml and dockerfile to the VPS" 
-          sudo mkdir -p $REPO_PATH
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:$REPO_PATH/
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:$REPO_PATH/docker-compose.yml
 
       - name: Pull Docker Image and Deploy
         env:
