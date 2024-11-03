@@ -4,12 +4,15 @@
 FROM node:18-alpine
 
 # Set the working directory and copy backend code
-WORKDIR /server
+WORKDIR /app
 COPY package*.json ./
-COPY . .
 
 # Install dependencies
 RUN npm install
+
+COPY . .
+
+RUN npm run build  # Make sure there's a "build" script in package.json like "tsc"
 
 # Expose port 5000 for the backend
 EXPOSE 5000
