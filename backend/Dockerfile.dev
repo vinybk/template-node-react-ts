@@ -1,0 +1,21 @@
+# Backend Dockerfile.dev
+
+# Use a Node.js image with TypeScript support
+FROM node:18-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy all source code
+COPY . .
+
+# Expose port 5000 for the backend server
+EXPOSE 5000
+
+# Start the backend server in development mode with nodemon
+CMD ["npx", "nodemon", "--watch", "src", "--ext", "ts", "--exec", "ts-node", "src/server.ts"]
+
