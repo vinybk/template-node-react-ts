@@ -1,10 +1,6 @@
-Hello!
-
 ## User
 
-- 
--
--
+- Welcome!
 
 
 ## Dev
