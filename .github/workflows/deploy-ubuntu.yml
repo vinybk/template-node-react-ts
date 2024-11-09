@@ -12,7 +12,8 @@ env:
   DEPLOY_USER: "ubuntu"
   REPO_PATH: "/home/ubuntu/shared-notes"
   DOCKER_COMPOSE_FILE: "docker-compose.yml"
-  IMAGE_NAME: "viniciusbrun/shared-notes"
+  FRONTEND_IMAGE_NAME: "vinbrun/sharednotes-frontend"
+  BACKEND_IMAGE_NAME: "vinbrun/sharednotes-backend"
   VERSION: "latest" 
 
 jobs:
@@ -70,25 +71,26 @@ jobs:
             echo "Logging in to Docker Hub..."
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-            echo "Pulling latest Docker image: $IMAGE_NAME:$VERSION"
-            docker pull $IMAGE_NAME:$VERSION
+            echo "Pulling latest Docker images: Frontend and Backend"
+            docker pull $FRONTEND_IMAGE_NAME:$VERSION
+            docker pull $BACKEND_IMAGE_NAME:$VERSION
 
             echo "Stopping current Docker Compose services..."
-            docker-compose -f $DOCKER_COMPOSE_FILE down || echo "No containers to stop, skipping..."
-
+            docker compose down || echo "No containers to stop, skipping..."
+            docker stop $(docker ps -a -q)
+            docker rm $(docker ps -qa)
+            docker image remove $(docker image list -q)
+            
             echo "Starting updated Docker Compose services..."
-            docker-compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
+            docker compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
 
             echo "Cleaning docker credentials..."
             docker logout
             
-            echo "Deployment complete."
+            echo "Docker deployment complete."
           EOF
 
       - name: Clean Up Local SSH Keys
         if: always()
         run: |
-          echo "Cleaning up SSH keys and known_hosts for security..."
-          rm -f ~/.ssh/id_rsa
-          rm -f ~/.ssh_askpass
-          rm -f ~/.ssh/known_hosts
+          rm -f ~/.ssh/id_rsa ~/.ssh_askpass ~/.ssh/known_hosts
