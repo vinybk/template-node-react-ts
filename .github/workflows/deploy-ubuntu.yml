@@ -77,8 +77,27 @@ jobs:
 
             echo "Stopping current Docker Compose services..."
             docker compose down || echo "No containers to stop, skipping..."
-            docker rm $(docker ps -qa) || echo "No containers to remove, skipping..."
-            docker image remove $(docker image list -q) || echo "No images to remove, skipping..."
+            
+            echo "Stopping all running containers..."
+            if [ "$(docker ps -q)" ]; then
+              docker stop $(docker ps -q) || echo "Failed to stop some containers, skipping..."
+            else
+              echo "No running containers to stop, skipping..."
+            fi
+
+            echo "Removing all stopped containers..."
+            if [ "$(docker ps -qa)" ]; then
+              docker rm $(docker ps -qa) || echo "Failed to remove some containers, skipping..."
+            else
+              echo "No containers to remove, skipping..."
+            fi
+
+            echo "Removing all images..."
+            if [ "$(docker image list -q)" ]; then
+              docker image rm $(docker image list -q) || echo "Failed to remove some images, skipping..."
+            else
+              echo "No images to remove, skipping..."
+            fi
             
             echo "Starting updated Docker Compose services..."
             docker compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
