@@ -11,6 +11,8 @@ env:
   DEPLOY_HOST: "sharednotes.app"
   DEPLOY_USER: "ubuntu"
   REPO_PATH: "/home/ubuntu/shared-notes"
+  FRONTEND_IMAGE_NAME: "vinbrun/sharednotes-frontend"
+  BACKEND_IMAGE_NAME: "vinbrun/sharednotes-backend"
   DOCKER_COMPOSE_FILE: "docker-compose.yml"
   VERSION: "latest" 
 
@@ -70,45 +72,23 @@ jobs:
             echo "Logging in to Docker Hub..."
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-            DEPLOY_LABEL=$(date +%s)  # Generate a unique label based on the current timestamp
+            echo "Checking if image $FRONTEND_IMAGE_NAME:$VERSION exists..."
+            docker manifest inspect $FRONTEND_IMAGE_NAME:$VERSION
+            docker manifest inspect $FRONTEND_IMAGE_NAME:$VERSION
 
-            # Step 1: Pull new images
-            echo "Pulling latest images defined in Docker Compose..."
-            docker compose -f $DOCKER_COMPOSE_FILE pull
+            # Step 1: Stop and Remove All Containers, Networks, and Images
+            echo "Stopping and removing all containers..."
+            docker ps -aq | xargs -r docker stop
+            docker ps -aq | xargs -r docker rm
 
-            # Step 1.5: Stop old containers
-            echo "Stoping old containers..."
-            set +e  # Temporarily disable exit-on-error for cleanup
-            docker compose -f $DOCKER_COMPOSE_FILE down
-            set -e  # Re-enable exit-on-error for critical steps
-            
-            if lsof -i :3000; then
-              echo "Port 3000 is in use by another process. Stopping the process."
-              lsof -i :3000 | awk 'NR>1 {print $2}' | xargs -r kill -9
-            else
-              echo "Port 3000 is free."
-            fi
-            
-            # Step 2: Run new containers with a unique deployment label
-            echo "Starting new containers with deployment label: deploy=$DEPLOY_LABEL"
-            docker compose -f $DOCKER_COMPOSE_FILE up -d --remove-orphans
-            
-            # Step 3: Apply label to new containers
-            echo "Applying deployment label to new containers..."
-            for container in \$(docker compose -f $DOCKER_COMPOSE_FILE ps -q); do
-              docker container update --label deploy=$DEPLOY_LABEL "\$container"
-            done
+            echo "Removing all networks..."
+            docker network ls -q | xargs -r docker network rm
 
-            # Step 4: Remove old containers (those without the current deployment label)
-            echo "Removing old containers..."
-            set +e  # Temporarily disable exit-on-error for cleanup
-            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker stop
-            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker rm
+            echo "Removing all images..."
+            docker images -q | xargs -r docker rmi -f
 
-            # Step 5: Clean up old images
-            echo "Removing unused images..."
-            docker image prune -f
-            set -e  # Re-enable exit-on-error for critical steps
+            echo "Starting new containers..."
+            docker compose -f $DOCKER_COMPOSE_FILE up -d --remove-orphans || { echo "Failed to start containers"; exit 1; }
 
             echo "Deployment completed successfully."
 
