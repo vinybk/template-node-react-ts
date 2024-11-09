@@ -12,8 +12,6 @@ env:
   DEPLOY_USER: "ubuntu"
   REPO_PATH: "/home/ubuntu/shared-notes"
   DOCKER_COMPOSE_FILE: "docker-compose.yml"
-  FRONTEND_IMAGE_NAME: "vinbrun/sharednotes-frontend"
-  BACKEND_IMAGE_NAME: "vinbrun/sharednotes-backend"
   VERSION: "latest" 
 
 jobs:
@@ -65,47 +63,44 @@ jobs:
         run: |
           echo "Deploying Docker container on remote server..."
           ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST << EOF
-            set -e  # Exit if any command fails
+            set -e  # Exit immediately if any command fails
+
             cd $REPO_PATH
 
             echo "Logging in to Docker Hub..."
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-            echo "Pulling latest Docker images: Frontend and Backend"
-            docker pull $FRONTEND_IMAGE_NAME:$VERSION
-            docker pull $BACKEND_IMAGE_NAME:$VERSION
+            DEPLOY_LABEL=$(date +%s)  # Generate a unique label based on the current timestamp
 
-            echo "Stopping current Docker Compose services..."
-            docker compose down || echo "No containers to stop, skipping..."
-            
-            echo "Stopping all running containers..."
-            if [ "$(docker ps -q)" ]; then
-              docker stop $(docker ps -q) || echo "Failed to stop some containers, skipping..."
-            else
-              echo "No running containers to stop, skipping..."
-            fi
+            # Step 1: Pull new images
+            echo "Pulling latest images defined in Docker Compose..."
+            docker compose -f $DOCKER_COMPOSE_FILE pull
 
-            echo "Removing all stopped containers..."
-            if [ "$(docker ps -qa)" ]; then
-              docker rm $(docker ps -qa) || echo "Failed to remove some containers, skipping..."
-            else
-              echo "No containers to remove, skipping..."
-            fi
+            # Step 2: Run new containers with a unique deployment label
+            echo "Starting new containers with deployment label: deploy=$DEPLOY_LABEL"
+            docker compose -f $DOCKER_COMPOSE_FILE up -d --remove-orphans
 
-            echo "Removing all images..."
-            if [ "$(docker image list -qa)" ]; then
-              docker image rm $(docker image list -qa) || echo "Failed to remove some images, skipping..."
-            else
-              echo "No images to remove, skipping..."
-            fi
-            
-            echo "Starting updated Docker Compose services..."
-            docker compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
-            
+            # Step 3: Apply label to new containers
+            echo "Applying deployment label to new containers..."
+            for container in \$(docker compose -f $DOCKER_COMPOSE_FILE ps -q); do
+              docker container update --label deploy=$DEPLOY_LABEL "\$container"
+            done
+
+            # Step 4: Stop and remove old containers (those without the current deployment label)
+            echo "Stopping and removing old containers..."
+            set +e  # Temporarily disable exit-on-error for cleanup
+            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker stop
+            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker rm
+
+            # Step 5: Clean up old images
+            echo "Removing unused images..."
+            docker image prune -f
+            set -e  # Re-enable exit-on-error for critical steps
+
+            echo "Deployment completed successfully."
+
             echo "Cleaning docker credentials..."
             docker logout
-            
-            echo "Docker deployment complete."
           EOF
 
       - name: Clean Up docker credentials
