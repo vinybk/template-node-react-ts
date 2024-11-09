@@ -76,20 +76,26 @@ jobs:
             echo "Pulling latest images defined in Docker Compose..."
             docker compose -f $DOCKER_COMPOSE_FILE pull
 
+            # Step 1.5: Stop old containers
+            echo "Stoping old containers..."
+            set +e  # Temporarily disable exit-on-error for cleanup
+            docker compose -f $DOCKER_COMPOSE_FILE down
+            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker stop
+            set -e  # Re-enable exit-on-error for critical steps
+            
             # Step 2: Run new containers with a unique deployment label
             echo "Starting new containers with deployment label: deploy=$DEPLOY_LABEL"
             docker compose -f $DOCKER_COMPOSE_FILE up -d --remove-orphans
-
+            
             # Step 3: Apply label to new containers
             echo "Applying deployment label to new containers..."
             for container in \$(docker compose -f $DOCKER_COMPOSE_FILE ps -q); do
               docker container update --label deploy=$DEPLOY_LABEL "\$container"
             done
 
-            # Step 4: Stop and remove old containers (those without the current deployment label)
+            # Step 4: Remove old containers (those without the current deployment label)
             echo "Stopping and removing old containers..."
             set +e  # Temporarily disable exit-on-error for cleanup
-            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker stop
             docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker rm
 
             # Step 5: Clean up old images
