@@ -36,9 +36,15 @@ jobs:
       - name: Determine Changed Folders
         id: changes
         run: |
-          # Fetch the list of changed files
-          git fetch origin ${{ github.base_ref }} --depth=1
-          CHANGED_FILES=$(git diff --name-only ${{ github.sha }} origin/${{ github.base_ref }})
+          # Determine the base commit
+          if [ -n "${{ github.event.before }}" ]; then
+            BASE_COMMIT=${{ github.event.before }}
+          else
+            BASE_COMMIT=$(git rev-parse HEAD~1)
+          fi
+
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only $BASE_COMMIT $GITHUB_SHA)
           
           # Check if frontend or backend has changed
           if echo "$CHANGED_FILES" | grep -q '^frontend/'; then
