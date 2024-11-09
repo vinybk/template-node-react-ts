@@ -5,8 +5,7 @@ on:
     workflows: ["Docker Build"]  # Name of the triggering workflow
     types:
       - completed  # Run only when "Docker Build" workflow is completed successfully
-  workflow_dispatch:
-
+      
 env:
   SSH_AUTH_SOCK: /tmp/ssh_agent.sock
   DEPLOY_HOST: "sharednotes.app"
