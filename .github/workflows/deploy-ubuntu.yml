@@ -80,7 +80,6 @@ jobs:
             echo "Stoping old containers..."
             set +e  # Temporarily disable exit-on-error for cleanup
             docker compose -f $DOCKER_COMPOSE_FILE down
-            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker stop
             set -e  # Re-enable exit-on-error for critical steps
             
             # Step 2: Run new containers with a unique deployment label
@@ -94,8 +93,9 @@ jobs:
             done
 
             # Step 4: Remove old containers (those without the current deployment label)
-            echo "Stopping and removing old containers..."
+            echo "Removing old containers..."
             set +e  # Temporarily disable exit-on-error for cleanup
+            docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker stop
             docker ps -q --filter "label=deploy" --filter "label!=deploy=$DEPLOY_LABEL" | xargs -r docker rm
 
             # Step 5: Clean up old images
