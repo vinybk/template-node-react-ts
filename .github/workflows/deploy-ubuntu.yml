@@ -82,6 +82,13 @@ jobs:
             docker compose -f $DOCKER_COMPOSE_FILE down
             set -e  # Re-enable exit-on-error for critical steps
             
+            if lsof -i :3000; then
+              echo "Port 3000 is in use by another process. Stopping the process."
+              lsof -i :3000 | awk 'NR>1 {print $2}' | xargs -r kill -9
+            else
+              echo "Port 3000 is free."
+            fi
+            
             # Step 2: Run new containers with a unique deployment label
             echo "Starting new containers with deployment label: deploy=$DEPLOY_LABEL"
             docker compose -f $DOCKER_COMPOSE_FILE up -d --remove-orphans
