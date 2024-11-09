@@ -77,7 +77,6 @@ jobs:
 
             echo "Stopping current Docker Compose services..."
             docker compose down || echo "No containers to stop, skipping..."
-            docker stop $(docker ps -a -q) || echo "No containers to stop, skipping..."
             docker rm $(docker ps -qa) || echo "No containers to remove, skipping..."
             docker image remove $(docker image list -q) || echo "No images to remove, skipping..."
             
