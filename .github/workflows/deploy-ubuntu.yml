@@ -72,24 +72,32 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
             echo "Pulling latest Docker images: Frontend and Backend"
-            docker pull $FRONTEND_IMAGE_NAME:$VERSION
-            docker pull $BACKEND_IMAGE_NAME:$VERSION
+            docker pull $FRONTEND_IMAGE_NAME:$VERSION || echo "unable to download frontend from docker" & exit 1
+            docker pull $BACKEND_IMAGE_NAME:$VERSION || echo "unable to download backend from docker" & exit 1
+            
+            echo "Cleaning docker credentials..."
+            docker logout
 
             echo "Stopping current Docker Compose services..."
             docker compose down || echo "No containers to stop, skipping..."
-            docker stop $(docker ps -a -q)
-            docker rm $(docker ps -qa)
-            docker image remove $(docker image list -q)
+            docker stop $(docker ps -a -q) || echo "No containers to stop, skipping..."
+            docker rm $(docker ps -qa) || echo "No containers to remove, skipping..."
+            docker image remove $(docker image list -q) || echo "No images to remove, skipping..."
             
             echo "Starting updated Docker Compose services..."
             docker compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
-
-            echo "Cleaning docker credentials..."
-            docker logout
             
             echo "Docker deployment complete."
           EOF
 
+      - name: Clean Up docker credentials
+        if: always()
+        run: |
+          echo "Cleaning docker credentials..."
+          ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST << EOF
+            docker logout || "no credentials to remove"
+          EOF
+            
       - name: Clean Up Local SSH Keys
         if: always()
         run: |
