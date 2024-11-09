@@ -115,8 +115,5 @@
     /* Emit */
     "outDir": "./dist",                                  // Set output directory for compiled files
     "sourceMap": true                                    // Enable source maps for easier debugging
-  
-
-
   }
 }
