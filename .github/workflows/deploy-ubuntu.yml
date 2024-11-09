@@ -73,11 +73,8 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
             echo "Pulling latest Docker images: Frontend and Backend"
-            docker pull $FRONTEND_IMAGE_NAME:$VERSION || echo "unable to download frontend from docker" & exit 1
-            docker pull $BACKEND_IMAGE_NAME:$VERSION || echo "unable to download backend from docker" & exit 1
-            
-            echo "Cleaning docker credentials..."
-            docker logout
+            docker pull $FRONTEND_IMAGE_NAME:$VERSION
+            docker pull $BACKEND_IMAGE_NAME:$VERSION
 
             echo "Stopping current Docker Compose services..."
             docker compose down || echo "No containers to stop, skipping..."
@@ -87,6 +84,9 @@ jobs:
             
             echo "Starting updated Docker Compose services..."
             docker compose -f $DOCKER_COMPOSE_FILE up -d || exit 1
+            
+            echo "Cleaning docker credentials..."
+            docker logout
             
             echo "Docker deployment complete."
           EOF
