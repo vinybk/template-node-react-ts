@@ -81,9 +81,6 @@ jobs:
             docker ps -aq | xargs -r docker stop
             docker ps -aq | xargs -r docker rm
 
-            echo "Removing all networks..."
-            docker network ls -q | xargs -r docker network rm
-
             echo "Removing all images..."
             docker images -q | xargs -r docker rmi -f
 
