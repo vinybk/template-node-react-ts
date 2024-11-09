@@ -93,8 +93,8 @@ jobs:
             fi
 
             echo "Removing all images..."
-            if [ "$(docker image list -q)" ]; then
-              docker image rm $(docker image list -q) || echo "Failed to remove some images, skipping..."
+            if [ "$(docker image list -qa)" ]; then
+              docker image rm $(docker image list -qa) || echo "Failed to remove some images, skipping..."
             else
               echo "No images to remove, skipping..."
             fi
