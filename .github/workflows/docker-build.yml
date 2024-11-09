@@ -13,8 +13,8 @@ on:
   workflow_dispatch:
 
 env:
-  FRONTEND_IMAGE_NAME: viniciusbrun/sharednotes-frontend
-  BACKEND_IMAGE_NAME: viniciusbrun/sharednotes-backend
+  FRONTEND_IMAGE_NAME: vinbrun/sharednotes-frontend
+  BACKEND_IMAGE_NAME: vinbrun/sharednotes-backend
 
 jobs:
   build-and-push:
