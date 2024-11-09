@@ -101,10 +101,14 @@ jobs:
           echo "Pushing Backend Docker image: $BACKEND_IMAGE_NAME:$VERSION"
           docker push $BACKEND_IMAGE_NAME:$VERSION
 
-      - name: Tag Latest for Production
-        if: github.ref == 'refs/heads/main' && (env.frontend_changed == 'true' || env.backend_changed == 'true')
+      - name: Tag Latest for Frontend Production
+        if: github.ref == 'refs/heads/main' && (env.frontend_changed == 'true')
         run: |
           docker tag $FRONTEND_IMAGE_NAME:$VERSION $FRONTEND_IMAGE_NAME:latest
-          docker tag $BACKEND_IMAGE_NAME:$VERSION $BACKEND_IMAGE_NAME:latest
           docker push $FRONTEND_IMAGE_NAME:latest
+
+      - name: Tag Latest for Backend Production
+        if: github.ref == 'refs/heads/main' && (env.backend_changed == 'true')
+        run: |
+          docker tag $BACKEND_IMAGE_NAME:$VERSION $BACKEND_IMAGE_NAME:latest
           docker push $BACKEND_IMAGE_NAME:latest
