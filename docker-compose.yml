@@ -3,14 +3,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: viniciusbrun/shared-notes:frontend
+    image: vinbrun/sharednotes-frontend:latest
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     environment:
       - VITE_API_URL=http://backend:5000
       - NODE_ENV=production
-    depends_on:
-      - backend
     restart: always
     networks:
       - app-network
@@ -24,7 +22,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: viniciusbrun/shared-notes:backend
+    image: vinbrun/sharednotes-backend:latest
     ports:
       - "${BACKEND_PORT:-5000}:5000"
     environment:
