@@ -1,0 +1,34 @@
+title: "Shared Notes"
+description: "A web app for group collaboration and simultaneous file editing"
+url: "https://viniciusbrun.github.io/shared-notes"  # Update with your actual site URL
+baseurl: "/shared-notes"  # The repository name for GitHub Pages
+
+theme: minima  # Choose a theme that allows customization, like Minima
+
+# Custom theme settings
+minima:
+  skin: dark  # Enable dark mode
+  social_links:  # Social media icons (optional)
+    github: viniciusbrun
+    linkedin: https://www.linkedin.com/in/vinicius-brun/
+
+# Markdown settings for improved documentation readability
+markdown: kramdown
+highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-seo-tag  # SEO plugin for better visibility
+  - jekyll-sitemap  # Automatically generates a sitemap
+  - jekyll-feed  # Adds an RSS feed for your project
+  - jekyll-paginate  # Adds pagination if needed
+
+# Exclude files from being published
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+
+sass:
+  load_paths:
+    - _sass
