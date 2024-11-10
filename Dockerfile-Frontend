@@ -3,13 +3,23 @@
 # Stage 1: Build the application
 FROM node:18-alpine AS build
 
-# Set working directory in the container
-WORKDIR /app
 
-# Install dependencies and build the app
-COPY package*.json ./
-COPY . .
+ARG repo_path=/home/node/
+ARG build_path=frontend/
+ARG shared_path=shared/
+
+WORKDIR ${repo_path}${build_path}
+
+# Copy package files and install dependencies
+COPY ${build_path}package*.json ./
 RUN npm install
+
+# Copy all source code
+COPY ${build_path} .
+
+# Copy shared resources
+COPY ${shared_path} ${repo_path}${shared_path}
+
 RUN npm run build  # Assumes build files are generated in /app/dist or /app/build
 
 # Stage 2: Serve the built app with Nginx

@@ -4,11 +4,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev  # Consistent naming with production Dockerfile
     ports:
-      - "${FRONTEND_PORT:-5173}:5173"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       - NODE_ENV=${FRONTEND_NODE_ENV:-development}
       - VITE_API_URL=http://backend:${BACKEND_PORT:-5000}  # Enables internal network communication
-      - PORT=${FRONTEND_PORT:-5173}
+      - PORT=${FRONTEND_PORT:-3000}
       - CHOKIDAR_USEPOLLING=true
     volumes:
       - ./frontend:/app
@@ -28,6 +28,7 @@ services:
     environment:
       - NODE_ENV=${BACKEND_NODE_ENV:-development}
       - PORT=${BACKEND_PORT:-5000}
+      - POSTGRES_CONNECTION_STRING=${POSTGRES_CONNECTION_STRING:?Missing Postgres connection string}
     volumes:
       - ./backend:/app
       - /app/node_modules
