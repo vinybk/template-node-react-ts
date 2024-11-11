@@ -15,6 +15,7 @@ env:
   BACKEND_IMAGE_NAME: "vinbrun/sharednotes-backend"
   DOCKER_COMPOSE_FILE: "docker-compose.yml"
   VERSION: "latest" 
+  POSTGRES_CONNECTION_STRING: ${{ secrets.PROD_POSTGRES_CONNECTION_STRING }}
 
 jobs:
   deploy:
@@ -52,10 +53,13 @@ jobs:
           echo "Testing SSH connection to ensure configuration is correct..."
           ssh -v -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "echo 'SSH connection successful'"
           
-      - name: Copy docker-compose.yml and dockerfile to VPS
+      - name: Copy docker-compose.yml and .env to VPS
         run: |
-          echo "Sending docker-compose.yml and dockerfile to the VPS" 
-          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST "mkdir -p $REPO_PATH"
+          echo "Sending docker-compose.yml and .env to the VPS" 
+          ssh -i ~/.ssh/id_rsa $DEPLOY_USER@$DEPLOY_HOST  << EOF 
+            mkdir -p $REPO_PATH
+            echo 'POSTGRES_CONNECTION_STRING=$POSTGRES_CONNECTION_STRING' >> $REPO_PATH/.env
+          EOF
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:$REPO_PATH/docker-compose.yml
 
       - name: Pull Docker Image and Deploy
