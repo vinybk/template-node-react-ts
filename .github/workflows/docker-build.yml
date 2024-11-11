@@ -115,9 +115,9 @@ jobs:
         run: |
           echo "Building Frontend Docker image with tag: $VERSION"
           if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
-            docker build -t $FRONTEND_IMAGE_NAME:$VERSION -f ./frontend/Dockerfile-Frontend.dev .
+            docker build -t $FRONTEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Frontend.dev .
           else
-            docker build -t $FRONTEND_IMAGE_NAME:$VERSION -f ./frontend/Dockerfile-Frontend .
+            docker build -t $FRONTEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Frontend .
           fi
           echo "Pushing Frontend Docker image: $FRONTEND_IMAGE_NAME:$VERSION"
           docker push $FRONTEND_IMAGE_NAME:$VERSION
@@ -130,9 +130,9 @@ jobs:
         run: |
           echo "Building Backend Docker image with tag: $VERSION"
           if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
-            docker build -t $BACKEND_IMAGE_NAME:$VERSION -f ./backend/Dockerfile-Backend.dev .
+            docker build -t $BACKEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Backend.dev .
           else
-            docker build -t $BACKEND_IMAGE_NAME:$VERSION -f ./backend/Dockerfile-Backend .
+            docker build -t $BACKEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Backend .
           fi
           echo "Pushing Backend Docker image: $BACKEND_IMAGE_NAME:$VERSION"
           docker push $BACKEND_IMAGE_NAME:$VERSION
