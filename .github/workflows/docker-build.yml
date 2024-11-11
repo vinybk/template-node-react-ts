@@ -36,6 +36,7 @@ jobs:
             echo "manual_trigger=true" >> $GITHUB_ENV
           else
             echo "manual_trigger=false" >> $GITHUB_ENV
+          fi
 
       - name: Determine Changed Folders
         id: changes
