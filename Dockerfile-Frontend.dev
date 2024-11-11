@@ -1,0 +1,25 @@
+# Dockerfile.dev
+FROM node:18-alpine
+
+
+ARG repo_path=/home/node/
+ARG build_path=frontend/
+ARG shared_path=shared/
+
+WORKDIR ${repo_path}${build_path}
+
+# Copy package files and install dependencies
+COPY ${build_path}package*.json ./
+RUN npm install
+
+# Copy all source code
+COPY ${build_path} .
+
+# Copy shared resources
+COPY ${shared_path} ${repo_path}${shared_path}
+
+# Expose the port the dev server runs on
+EXPOSE 3000
+
+# Run in development mode
+CMD ["npm", "run", "dev", "test"]

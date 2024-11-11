@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "start": "ts-node src/server.ts",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/server.ts",
+    "dev": "nodemon --watch src --ext ts --exec ts-node -r tsconfig-paths/register --legacy-watch src/server.ts",
     "build": "tsc"
   },
   "keywords": [],
@@ -13,17 +13,22 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-session": "^1.18.1",
     "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "redis": "^4.7.0",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.8.6",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
     "@types/supertest": "^6.0.2",
     "nodemon": "^3.1.7",
     "ts-jest": "^29.2.5",

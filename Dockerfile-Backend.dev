@@ -3,19 +3,25 @@
 # Use a Node.js image with TypeScript support
 FROM node:18-alpine
 
-# Set the working directory
-WORKDIR /app
+ARG repo_path=/home/node/
+ARG build_path=backend/
+ARG shared_path=shared/
+
+WORKDIR ${repo_path}${build_path}
 
 # Copy package files and install dependencies
-COPY package*.json ./
+COPY ${build_path}package*.json ./
 RUN npm install
 
 # Copy all source code
-COPY . .
+COPY ${build_path} .
+
+# Copy shared resources
+COPY ${shared_path} ${repo_path}${shared_path}
 
 # Expose port 5000 for the backend server
 EXPOSE 5000
 
 # Start the backend server in development mode with nodemon
-CMD ["npx", "nodemon", "--watch", "src", "--ext", "ts", "--exec", "ts-node", "src/server.ts"]
+CMD ["npm", "run", "dev", "test"]
 
