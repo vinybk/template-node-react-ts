@@ -3,7 +3,6 @@
 # Stage 1: Build the application
 FROM node:18-alpine AS build
 
-
 ARG repo_path=/home/node/
 ARG build_path=frontend/
 ARG shared_path=shared/
@@ -24,6 +23,10 @@ RUN npm run build  # Assumes build files are generated in /app/dist or /app/buil
 
 # Stage 2: Serve the built app with Nginx
 FROM nginx:alpine
+
+ARG repo_path=/home/node/
+ARG build_path=frontend/
+ARG shared_path=shared/
 
 # Copy built files from the previous stage
 COPY --from=build ${repo_path}${build_path}/dist /usr/share/nginx/html
