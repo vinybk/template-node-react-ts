@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0  # Fetch full history to ensure HEAD~1 is available
           
       - name: Checkout code
-        id: identify trigger
+        id: identify-trigger
         run: | 
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "manual_trigger=true" >> $GITHUB_ENV
