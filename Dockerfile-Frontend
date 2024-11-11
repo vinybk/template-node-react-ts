@@ -26,10 +26,10 @@ RUN npm run build  # Assumes build files are generated in /app/dist or /app/buil
 FROM nginx:alpine
 
 # Copy built files from the previous stage
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build ${repo_path}${build_path}/dist /usr/share/nginx/html
 
 # Copy a custom Nginx configuration file to handle SPA routing (optional)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY ${build_path}nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose Nginx's default HTTP port
 EXPOSE 80
