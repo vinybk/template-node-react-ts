@@ -4,16 +4,21 @@
     "types": [
       "node",
       "jest",
+      "@testing-library/jest-dom"
     ],
     "jsx": "react-jsx",
-    "target":"ES2023",
-    "module": "Node16",
-    "moduleResolution": "node16",
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"], 
+    "module": "esnext",
+    "moduleResolution": "node",
     "allowImportingTsExtensions": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
     "noEmit": true,
-    "baseUrl": ".", // Required to use "paths"
+    "baseUrl": ".",
     "paths": {
-        "@shared/*": ["../shared/*"]  // Map `@shared/*` to the shared folder path
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": ["src", "../shared"]
