@@ -1,5 +1,7 @@
 # SharedNotes
 
+![SharedNotes UI](https://github.com/user-attachments/assets/4a287412-ebcf-450b-b700-55e8b7f17d03)
+
 SharedNotes is a collaborative platform with features focused on simultaneous file editing. Below is the development roadmap, detailing the major milestones and features planned for the project.
 
 ## Roadmap
