@@ -112,6 +112,7 @@ deploy:
 clean_and_install:
   stage: clean_and_install
   image: node:22
+  needs: [] 
   script:
     - echo "Cleaning and re-installing dependencies for frontend"
     - rm -rf frontend/node_modules frontend/package-lock.json
