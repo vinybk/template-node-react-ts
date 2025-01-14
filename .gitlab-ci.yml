@@ -56,10 +56,6 @@ check_and_prepare:
         echo "Both lock files are present. Proceeding with the pipeline."
       fi
 
-
-
-
-
 # Step 2: Testing
 test:
   stage: test
