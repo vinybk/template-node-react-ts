@@ -4,7 +4,14 @@ import LoginModal from '../LoginModal';
 
 test('calls onRegister when register link is clicked', () => {
     const onRegister = jest.fn();
-    render(<LoginModal isOpen={true} onRegister={onRegister} onGoogleSignIn={() => {}} onEmailSignIn={() => {}} />);
+    render(
+        <LoginModal 
+            isOpen={true} 
+            onRegister={onRegister} 
+            onGoogleSignIn={() => {}} 
+            onEmailSignIn={() => {}} 
+            onClose={() => {}}
+        />);
     
     fireEvent.click(screen.getByText("Don’t have an account? Register"));
     expect(onRegister).toHaveBeenCalledTimes(1);
