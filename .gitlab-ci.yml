@@ -13,15 +13,17 @@ variables:
 
 cache:
   paths:
-    - node_modules/
+    - frontend/node_modules/
+    - backend/node_modules/
 
-# Step 1: Check and Prepare
-check_and_prepare:
+#check_and_prepare:
   stage: check_and_prepare
-  image: node:22
+  image: node:22-alpine
   before_script:
+    - apk add --no-cache git
     - git config --global user.email "ci-bot@prometheus.systems"
     - git config --global user.name "CI Bot"
+    - git checkout $CI_COMMIT_REF_NAME # Check out the current branch
   script:
     - echo "Checking for changes in package.json files or missing locks"
     - |
@@ -59,7 +61,7 @@ check_and_prepare:
         # Commit new package-lock.json files
         git add frontend/package-lock.json backend/package-lock.json
         git commit -m "Regenerate package-lock.json files [ci skip]" || echo "No changes to commit"
-        git push https://${GITLAB_USER}:${GITLAB_TOKEN}@${CI_REPOSITORY_URL#https://} $CI_COMMIT_BRANCH
+        git push https://${GITLAB_USER}:${GITLAB_TOKEN}@${CI_REPOSITORY_URL#https://} $CI_COMMIT_REF_NAME
 
         # Exit pipeline
         echo "New package-lock.json files committed. Exiting pipeline."
@@ -70,10 +72,11 @@ check_and_prepare:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"'
 
+
 # Step 2: Testing
 test:
   stage: test
-  image: node:22
+  image: node:22-alpine
   script:
     - echo "Checking for changes in frontend/package.json"
     - |
