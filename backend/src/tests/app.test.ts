@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../src/app';
+import app from '../app';
 
 describe('Basic App Test', () => {
     it('should respond with 404 for an unknown route', async () => {
