@@ -12,6 +12,7 @@ variables:
   DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
 
 cache:
+  key: "refresh-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}" 
   paths:
     - frontend/node_modules/
     - backend/node_modules/
