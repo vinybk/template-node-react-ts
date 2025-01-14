@@ -15,6 +15,9 @@ cache:
   paths:
     - frontend/node_modules/
     - backend/node_modules/
+  exclude:
+    - frontend/package-lock.json
+    - backend/package-lock.json
 
 check_and_prepare:
   stage: check_and_prepare
