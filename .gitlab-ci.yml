@@ -13,13 +13,9 @@ cache:
   paths:
     - node_modules/
 
-before_script:
-  - echo "Setting up GitLab CI environment"
-  - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
-
 test:
   stage: test
-  image: node:16
+  image: node:22
   script:
     - echo "Installing dependencies and running Jest tests"
     - npm ci
@@ -30,9 +26,15 @@ test:
 
 build:
   stage: build
-  image: docker:latest
+  image: docker:20.10.16
   services:
     - docker:dind
+  variables:
+    DOCKER_HOST: "tcp://docker:2375"
+  before_script:
+    - echo "Installing dependencies for Docker build"
+    - apk add --no-cache git
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
   script:
     - echo "Building Docker images"
     - |
@@ -53,7 +55,7 @@ build:
 
 deploy:
   stage: deploy
-  image: docker:latest
+  image: docker:20.10.16
   services:
     - docker:dind
   before_script:
