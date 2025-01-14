@@ -124,6 +124,7 @@ clean_and_install:
     - npm install
     - cd ..
   when: manual
+  allow_failure: true
   only:
     - develop
     - main
