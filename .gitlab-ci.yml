@@ -23,7 +23,7 @@ check_and_prepare:
     - apk add --no-cache git
     - git config --global user.email "ci-bot@prometheus.systems"
     - git config --global user.name "CI Bot"
-    - git checkout $CI_COMMIT_REF_NAME # Check out the current branch
+    - git checkout $CI_COMMIT_REF_NAME # Ensure correct branch is checked out
   script:
     - echo "Checking for changes in package.json files or missing locks"
     - |
@@ -61,7 +61,7 @@ check_and_prepare:
         # Commit new package-lock.json files
         git add frontend/package-lock.json backend/package-lock.json
         git commit -m "Regenerate package-lock.json files [ci skip]" || echo "No changes to commit"
-        git push https://${GITLAB_USER}:${GITLAB_TOKEN}@${CI_REPOSITORY_URL#https://} $CI_COMMIT_REF_NAME
+        git push "${CI_REPOSITORY_URL}" $CI_COMMIT_REF_NAME
 
         # Exit pipeline
         echo "New package-lock.json files committed. Exiting pipeline."
@@ -71,6 +71,7 @@ check_and_prepare:
       fi
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"'
+
 
 
 # Step 2: Testing
