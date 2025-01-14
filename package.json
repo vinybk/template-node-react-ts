@@ -1,0 +1,22 @@
+{
+    "name": "template-node-react-ts",
+    "private": true,
+    "version": "1.0.0",
+    "workspaces": [
+      "frontend",
+      "backend",
+      "shared"
+    ],
+    "scripts": {
+      "build": "npm run build -w shared && npm run build -w frontend && npm run build -w backend",
+      "dev": "npm run dev -w frontend && npm run dev -w backend",
+      "test": "npm run test -w frontend && npm run test -w backend",
+      "clean": "rimraf node_modules frontend/node_modules backend/node_modules shared/node_modules"
+    },
+    "devDependencies": {
+      "typescript": "^5.6.3", // Shared dependency for all workspaces
+      "jest": "^29.7.0",       // Shared testing framework
+      "zod": "^3.23.8"
+    }
+  }
+  
