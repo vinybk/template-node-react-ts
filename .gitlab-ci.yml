@@ -30,8 +30,6 @@ test:
     - cd ../backend
     - npm ci
     - npm test
-  dependencies:
-    - check_and_prepare # Use artifacts from the previous stage
   only:
     - develop
     - main
