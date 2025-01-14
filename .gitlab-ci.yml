@@ -18,13 +18,29 @@ test:
   stage: test
   image: node:22
   script:
-    - echo "Running frontend tests"
-    - cd frontend
-    - npm ci
+    - echo "Checking for changes in frontend/package.json"
+    - |
+      if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep -q "frontend/package.json"; then
+        echo "frontend/package.json has changed. Running npm install..."
+        cd frontend
+        npm install
+      else
+        echo "frontend/package.json has not changed. Running npm ci..."
+        cd frontend
+        npm ci
+      fi
     - npm test
-    - echo "Running backend tests"
-    - cd ../backend
-    - npm ci
+    - echo "Checking for changes in backend/package.json"
+    - |
+      if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep -q "backend/package.json"; then
+        echo "backend/package.json has changed. Running npm install..."
+        cd ../backend
+        npm install
+      else
+        echo "backend/package.json has not changed. Running npm ci..."
+        cd ../backend
+        npm ci
+      fi
     - npm test
   only:
     - develop

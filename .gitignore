@@ -27,5 +27,3 @@ dist-ssr
 .env
 .env.dev
 .env.test
-
-**/package-lock.json
