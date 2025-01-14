@@ -1,4 +1,5 @@
 stages:
+  - check_and_prepare
   - test
   - build
   - deploy
@@ -14,6 +15,62 @@ cache:
   paths:
     - node_modules/
 
+# Step 1: Check and Prepare
+check_and_prepare:
+  stage: check_and_prepare
+  image: node:22
+  before_script:
+    - git config --global user.email "ci-bot@prometheus.systems"
+    - git config --global user.name "CI Bot"
+  script:
+    - echo "Checking for changes in package.json files or missing locks"
+    - |
+      PACKAGE_JSON_CHANGED=false
+      LOCKS_MISSING=false
+
+      # Check if package.json files have changed
+      if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep -qE "frontend/package.json|backend/package.json"; then
+        echo "package.json files have changed."
+        PACKAGE_JSON_CHANGED=true
+      fi
+
+      # Check if package-lock.json files are missing
+      if [ ! -f frontend/package-lock.json ] || [ ! -f backend/package-lock.json ]; then
+        echo "package-lock.json files are missing."
+        LOCKS_MISSING=true
+      fi
+
+      # If either condition is true, proceed with clean install
+      if [ "$PACKAGE_JSON_CHANGED" = true ] || [ "$LOCKS_MISSING" = true ]; then
+        echo "Condition met. Performing clean install."
+
+        # Clean and install frontend
+        rm -rf frontend/node_modules frontend/package-lock.json
+        cd frontend
+        npm install
+        cd ..
+
+        # Clean and install backend
+        rm -rf backend/node_modules backend/package-lock.json
+        cd backend
+        npm install
+        cd ..
+
+        # Commit new package-lock.json files
+        git add frontend/package-lock.json backend/package-lock.json
+        git commit -m "Regenerate package-lock.json files [ci skip]" || echo "No changes to commit"
+        git push https://${GITLAB_USER}:${GITLAB_TOKEN}@${CI_REPOSITORY_URL#https://} $CI_COMMIT_BRANCH
+
+        # Exit pipeline
+        echo "New package-lock.json files committed. Exiting pipeline."
+        exit 0
+      else
+        echo "No changes detected. Proceeding with the pipeline."
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+
+# Step 2: Testing
 test:
   stage: test
   image: node:22
@@ -46,6 +103,7 @@ test:
     - develop
     - main
 
+# Step 3: Build
 build:
   stage: build
   image: docker:24.0
@@ -74,6 +132,7 @@ build:
     - main
     - tags
 
+# Step 4: Deploy
 deploy:
   stage: deploy
   image: docker:24.0
