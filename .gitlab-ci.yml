@@ -8,6 +8,7 @@ variables:
   BACKEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/sharednotes-backend"
   VERSION: "latest"
   DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
 
 cache:
   paths:
@@ -31,15 +32,14 @@ test:
 
 build:
   stage: build
-  image: docker:20.10.16
+  image: docker:24.0
   services:
     - docker:dind
   variables:
     DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
   before_script:
-    - echo "Installing dependencies for Docker build"
-    - apk add --no-cache git
-    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+    - echo $CI_JOB_TOKEN | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
     - echo "Building Docker images"
     - |
@@ -60,9 +60,12 @@ build:
 
 deploy:
   stage: deploy
-  image: docker:20.10.16
+  image: docker:24.0
   services:
     - docker:dind
+  variables:
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
   before_script:
     - echo "Setting up SSH credentials"
     - mkdir -p ~/.ssh
