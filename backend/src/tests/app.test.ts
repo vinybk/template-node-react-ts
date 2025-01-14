@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../src/app';
+import app from '../app';
 
 describe('Basic OAuth route tests', () => {
     it('should respond with a redirect on GET /auth/google', async () => {
