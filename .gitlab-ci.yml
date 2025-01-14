@@ -3,9 +3,9 @@ stages:
 
 reset_repository:
   stage: reset
-  image: alpine/git  # Lightweight Git image
+  image: alpine:latest  # Use Alpine Linux base image
   before_script:
-    - apk add --no-cache bash  # Ensure the shell environment is available
+    - apk add --no-cache git bash  # Install Git and Bash
   script:
     - echo "Resetting repository..."
     - cd ..
