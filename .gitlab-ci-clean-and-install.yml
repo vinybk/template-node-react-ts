@@ -1,0 +1,20 @@
+stages:
+  - clean_and_install
+
+clean_and_install:
+  stage: clean_and_install
+  image: node:22
+  script:
+    - echo "Cleaning and re-installing dependencies for frontend"
+    - rm -rf frontend/node_modules frontend/package-lock.json
+    - cd frontend
+    - npm install
+    - cd ..
+    - echo "Cleaning and re-installing dependencies for backend"
+    - rm -rf backend/node_modules backend/package-lock.json
+    - cd backend
+    - npm install
+    - cd ..
+  when: manual
+  allow_failure: true
+  needs: [] # Make the job independent of any other jobs
