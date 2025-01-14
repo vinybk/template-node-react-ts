@@ -17,7 +17,12 @@ test:
   stage: test
   image: node:22
   script:
-    - echo "Installing dependencies and running Jest tests"
+    - echo "Running frontend tests"
+    - cd frontend
+    - npm ci
+    - npm test
+    - echo "Running backend tests"
+    - cd ../backend
     - npm ci
     - npm test
   only:
