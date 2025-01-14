@@ -14,9 +14,9 @@
       "clean": "rimraf node_modules frontend/node_modules backend/node_modules shared/node_modules"
     },
     "devDependencies": {
-      "typescript": "^5.6.3", // Shared dependency for all workspaces
-      "jest": "^29.7.0",       // Shared testing framework
+      "typescript": "^5.6.3",
+      "jest": "^29.7.0",
       "zod": "^3.23.8"
     }
-  }
+}
   
