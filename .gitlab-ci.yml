@@ -30,31 +30,27 @@ check_and_prepare:
     - echo "Checking if package-lock.json files exist"
     - if [ -f frontend/package-lock.json ]; then echo "Frontend lock exists"; else echo "Frontend lock missing"; fi
     - if [ -f backend/package-lock.json ]; then echo "Backend lock exists"; else echo "Backend lock missing"; fi
-
     - echo "Performing cleanup and reinstall if necessary"
-    - |
-      if [ ! -f frontend/package-lock.json ] || [ ! -f backend/package-lock.json ]; then
-        echo "One or both lock files are missing. Cleaning up and regenerating..."
-        rm -rf frontend/node_modules backend/node_modules
-        rm -f frontend/package-lock.json backend/package-lock.json
-
-        # Reinstall dependencies
-        cd frontend
-        npm install
-        cd ../backend
-        npm install
-        cd ..
-
-        # Commit the regenerated lock files
-        git add frontend/package-lock.json backend/package-lock.json
-        git commit -m "Regenerate missing package-lock.json files [ci skip]" || echo "No changes to commit"
-        git push "${CI_REPOSITORY_URL}" $CI_COMMIT_REF_NAME
-
-        # Exit pipeline to re-trigger
-        exit 0
+    - if [ ! -f frontend/package-lock.json ] || [ ! -f backend/package-lock.json ]; then
+        echo "One or both lock files are missing. Cleaning up and regenerating...";
+        rm -rf frontend/node_modules frontend/package-lock.json;
+        cd frontend;
+        npm install;
+        cd ..;
+        rm -rf backend/node_modules backend/package-lock.json;
+        cd backend;
+        npm install;
+        cd ..;
+        git add frontend/package-lock.json backend/package-lock.json;
+        git commit -m "Regenerate missing package-lock.json files [ci skip]" || echo "No changes to commit";
+        git push "${CI_REPOSITORY_URL}" $CI_COMMIT_REF_NAME;
+        exit 0;
       else
-        echo "Both lock files are present. Proceeding with the pipeline."
+        echo "Both lock files are present. Proceeding with the pipeline.";
       fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+
 
 # Step 2: Testing
 test:
