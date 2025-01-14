@@ -2,6 +2,7 @@ stages:
   - test
   - build
   - deploy
+  - clean_and_install
 
 variables:
   FRONTEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/sharednotes-frontend"
@@ -106,4 +107,23 @@ deploy:
         docker-compose -f docker-compose.yml up -d --remove-orphans
       EOF
   only:
+    - main
+
+clean_and_install:
+  stage: clean_and_install
+  image: node:22
+  script:
+    - echo "Cleaning and re-installing dependencies for frontend"
+    - rm -rf frontend/node_modules frontend/package-lock.json
+    - cd frontend
+    - npm install
+    - cd ..
+    - echo "Cleaning and re-installing dependencies for backend"
+    - rm -rf backend/node_modules backend/package-lock.json
+    - cd backend
+    - npm install
+    - cd ..
+  when: manual
+  only:
+    - develop
     - main
