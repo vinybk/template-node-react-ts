@@ -36,12 +36,12 @@ check_and_prepare:
     - |
       # Check for frontend/package-lock.json
       if [ -f frontend/package-lock.json ]; then
-        if ! git ls-files --error-unmatch frontend/package-lock.json >/dev/null 2>&1; then
-          echo "frontend/package-lock.json is not tracked in the repo. Adding it.";
-          git add frontend/package-lock.json;
+        if ! git ls-tree --name-only "$CI_COMMIT_SHA" frontend/package-lock.json >/dev/null 2>&1; then
+          echo "frontend/package-lock.json is not present in commit $CI_COMMIT_SHA. Adding it.";
+          # git add frontend/package-lock.json;
           REGENERATED=true;
         else
-          echo "frontend/package-lock.json is already tracked in the repository.";
+          echo "frontend/package-lock.json is already present in commit $CI_COMMIT_SHA.";
         fi
       else
         echo "frontend/package-lock.json does not exist at all.";
@@ -50,12 +50,12 @@ check_and_prepare:
     - |
       # Check for backend/package-lock.json
       if [ -f backend/package-lock.json ]; then
-        if ! git ls-files --error-unmatch backend/package-lock.json >/dev/null 2>&1; then
-          echo "backend/package-lock.json is not tracked in the repo. Adding it.";
-          git add backend/package-lock.json;
+        if ! git ls-tree --name-only "$CI_COMMIT_SHA" backend/package-lock.json >/dev/null 2>&1; then
+          echo "backend/package-lock.json is not present in commit $CI_COMMIT_SHA. Adding it.";
+          # git add backend/package-lock.json;
           REGENERATED=true;
         else
-          echo "backend/package-lock.json is already tracked in the repository.";
+          echo "backend/package-lock.json is already present in commit $CI_COMMIT_SHA.";
         fi
       else
         echo "backend/package-lock.json does not exist at all.";
@@ -65,8 +65,8 @@ check_and_prepare:
       # Commit and push if any changes were made
       if [ "$REGENERATED" = "true" ]; then
         echo "Committing and pushing newly added package-lock.json files.";
-        git commit -m "Add missing package-lock.json files [ci skip]";
-        git push https://$CI_REPOSITORY_URL $CI_COMMIT_REF_NAME;
+        # git commit -m "Add missing package-lock.json files [ci skip]";
+        # git push https://$CI_REPOSITORY_URL $CI_COMMIT_REF_NAME;
         echo "Exiting job since changes were made.";
         exit 0;
       else
