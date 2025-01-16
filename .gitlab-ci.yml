@@ -32,7 +32,7 @@ test:
     - main
 
 build:
-  stage: build_container
+  stage: build
   image: docker:latest
   services:
     - docker:dind
