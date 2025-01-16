@@ -1,6 +1,7 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "module": "CommonJS", // Backend may require CommonJS for compatibility.
     "outDir": "./dist",
     "types": ["node", "jest"],

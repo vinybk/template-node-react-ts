@@ -1,6 +1,7 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "jsx": "react-jsx",
     "types": ["node", "jest", "@testing-library/jest-dom"],
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
