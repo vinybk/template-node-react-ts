@@ -36,8 +36,6 @@ build:
     - docker:dind  
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  
-  
   script:
     - echo "Building Docker images"
     - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then docker compose -f docker-compose.yml build; fi
@@ -63,6 +61,7 @@ deploy:
 
   script:
     - echo "Sending secrets to VPS and deploying application"
+    - scp .env docker-compose.* ${VPS_USER}@{HOST_URL}:/home/ubuntu/template-node-react-ts-frontend
     - |
       ssh ${VPS_USER}@${HOST_URL} << EOF
         cd /home/ubuntu/
