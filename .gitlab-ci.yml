@@ -38,10 +38,18 @@ build:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - echo "Building Docker images"
-    - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then docker compose -f docker-compose.yml build; fi
-    - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then docker compose -f docker-compose.yml push; fi
-    - if [ "$CI_COMMIT_REF_NAME" == "develop" ]; then docker compose -f docker-compose.dev.yml build; fi
-    - if [ "$CI_COMMIT_REF_NAME" == "develop" ]; then docker compose -f docker-compose.dev.yml push; fi
+    - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then 
+        docker build -t $FRONTEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Frontend;
+        docker build -t $BACKEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Backend;
+        docker push $FRONTEND_IMAGE_NAME:$VERSION; 
+        docker push $BACKEND_IMAGE_NAME:$VERSION; 
+      fi
+    - if [ "$CI_COMMIT_REF_NAME" == "develop" ]; then 
+        docker build -t $FRONTEND_IMAGE_NAME-dev:$VERSION -f ./Dockerfile-Frontend-dev;
+        docker build -t $BACKEND_IMAGE_NAME-dev:$VERSION -f ./Dockerfile-Backend-dev;
+        docker push $FRONTEND_IMAGE_NAME-dev:$VERSION; 
+        docker push $BACKEND_IMAGE_NAME-dev:$VERSION; 
+    fi
 
 deploy:
   stage: deploy
