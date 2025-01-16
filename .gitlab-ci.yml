@@ -33,9 +33,11 @@ build:
   stage: build
   image: docker:latest
   services:
-    - docker:dind
+    - docker:dind  
   before_script:
-    - echo $PERSONAL_ACCESS_TOKEN | docker login -u $GITLAB_USERNAME --password-stdin $CI_REGISTRY
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  
+  
   script:
     - echo "Building Docker images"
     - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then docker compose -f docker-compose.yml build; fi
@@ -70,18 +72,19 @@ deploy:
         echo "Decoding secrets and writing to file"
         echo "POSTGRES_CONNECTION_STRING_DEV=\$(echo $POSTGRES_CONNECTION_STRING_DEV_B64 | base64 --decode)" >> .env
         echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 --decode)" >> .env
-        echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 --decode)" >> .env
         echo "FRONTEND_IMAGE=\$FRONTEND_IMAGE:$VERSION" >> .env
         echo "BACKEND_IMAGE=\$BACKEND_IMAGE:$VERSION" >> .env
         chmod 600 .env
 
-        if [ "$CI_COMMIT_REF_NAME" == "master" ]; then
-          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.yml pull;
-          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.yml up -d --remove-orphans;
-          else
-          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.dev.yml pull;
-          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.dev.yml up -d --remove-orphans;
+        if [ "$CI_COMMIT_REF_NAME" == "main" ]; then
+          docker compose -f docker-compose.yml build;
+          docker compose -f docker-compose.yml push;
         fi
+        if [ "$CI_COMMIT_REF_NAME" == "develop" ]; then
+          docker compose -f docker-compose.dev.yml build;
+          docker compose -f docker-compose.dev.yml push;
+        fi
+
       EOF
 
   rules:
