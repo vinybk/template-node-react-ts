@@ -4,8 +4,8 @@ stages:
   - deploy
 
 variables:
-  FRONTEND_IMAGE: "${CI_REGISTRY_IMAGE}/template-node-react-ts-frontend"
-  BACKEND_IMAGE: "${CI_REGISTRY_IMAGE}/template-node-react-ts-backend"
+  FRONTEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/template-node-react-ts-frontend"
+  BACKEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/template-node-react-ts-backend"
   VERSION: "latest"
   DOCKER_HOST: "tcp://docker:2375"
   DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
@@ -79,8 +79,8 @@ deploy:
         echo "Decoding secrets and writing to file"
         echo "POSTGRES_CONNECTION_STRING_DEV=\$(echo $POSTGRES_CONNECTION_STRING_DEV_B64 | base64 --decode)" >> .env
         echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 --decode)" >> .env
-        echo "FRONTEND_IMAGE=\$FRONTEND_IMAGE:$VERSION" >> .env
-        echo "BACKEND_IMAGE=\$BACKEND_IMAGE:$VERSION" >> .env
+        echo "FRONTEND_IMAGE=\$FRONTEND_IMAGE_NAME:$VERSION" >> .env
+        echo "BACKEND_IMAGE=\$BACKEND_IMAGE_NAME:$VERSION" >> .env
         chmod 600 .env
 
         if [ "$CI_COMMIT_REF_NAME" == "main" ]; then
