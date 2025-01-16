@@ -40,15 +40,15 @@ build:
     - |
       echo "Building Docker images"
       if [ "$CI_COMMIT_REF_NAME" == "main" ]; then 
-        docker build -t $FRONTEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Frontend; .
-        docker build -t $BACKEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Backend; .
-        docker push $FRONTEND_IMAGE_NAME:$VERSION; 
-        docker push $BACKEND_IMAGE_NAME:$VERSION; 
+        docker build -t $FRONTEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Frontend .
+        docker build -t $BACKEND_IMAGE_NAME:$VERSION -f ./Dockerfile-Backend .
+        docker push $FRONTEND_IMAGE_NAME:$VERSION 
+        docker push $BACKEND_IMAGE_NAME:$VERSION 
       elif [ "$CI_COMMIT_REF_NAME" == "develop" ]; then 
-        docker build -t $FRONTEND_IMAGE_NAME-dev:$VERSION -f ./Dockerfile-Frontend-dev; .
-        docker build -t $BACKEND_IMAGE_NAME-dev:$VERSION -f ./Dockerfile-Backend-dev; .
-        docker push $FRONTEND_IMAGE_NAME-dev:$VERSION; 
-        docker push $BACKEND_IMAGE_NAME-dev:$VERSION; 
+        docker build -t $FRONTEND_IMAGE_NAME-dev:$VERSION -f ./Dockerfile-Frontend-dev .
+        docker build -t $BACKEND_IMAGE_NAME-dev:$VERSION -f ./Dockerfile-Backend-dev .
+        docker push $FRONTEND_IMAGE_NAME-dev:$VERSION 
+        docker push $BACKEND_IMAGE_NAME-dev:$VERSION 
       fi
 
 deploy:
