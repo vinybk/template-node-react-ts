@@ -4,16 +4,18 @@ stages:
   - deploy
 
 variables:
-  FRONTEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/sharednotes-frontend"
-  BACKEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/sharednotes-backend"
+  FRONTEND_IMAGE: "${CI_REGISTRY_IMAGE}/template-node-react-ts-frontend"
+  BACKEND_IMAGE: "${CI_REGISTRY_IMAGE}/template-node-react-ts-backend"
   VERSION: "latest"
   DOCKER_HOST: "tcp://docker:2375"
   DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
 
 cache:
   paths:
-    - frontend/node_modules/
-    - backend/node_modules/
+    - node_modules/
+
+before_script:
+  - echo $PERSONAL_ACCESS_TOKEN | docker login -u $GITLAB_USERNAME --password-stdin $CI_REGISTRY
 
 test:
   stage: test
@@ -22,12 +24,7 @@ test:
     - develop
     - main
   script:
-    - echo "Running tests for frontend"
-    - cd frontend
-    - npm ci
-    - npm test
-    - echo "Running tests for backend"
-    - cd ../backend
+    - echo "Running tests for frontend and backend"
     - npm ci
     - npm test
   only:
@@ -35,32 +32,16 @@ test:
     - main
 
 build:
-  stage: build
-  image: docker:24.0
+  stage: build_container
+  image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: "tcp://docker:2375"
-    DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
-  before_script:
-    - echo $CI_JOB_TOKEN | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
     - echo "Building Docker images"
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "develop" ]]; then
-        TAG="$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "0.0.0")-dev"
-      else
-        TAG="$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "0.0.0")"
-      fi
-      export VERSION=$TAG
-    - if [[ $CI_COMMIT_BRANCH == "develop" ]]; then docker build -t ${FRONTEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Frontend.dev .; else docker build -t ${FRONTEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Frontend .; fi
-    - if [[ $CI_COMMIT_BRANCH == "develop" ]]; then docker build -t ${BACKEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Backend.dev .; else docker build -t ${BACKEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Backend .; fi
-    - docker push ${FRONTEND_IMAGE_NAME}:${VERSION}
-    - docker push ${BACKEND_IMAGE_NAME}:${VERSION}
-  only:
-    - develop
-    - main
-    - tags
+    - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then docker compose -f docker-compose.yml build; fi
+    - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then docker compose -f docker-compose.yml push; fi
+    - if [ "$CI_COMMIT_REF_NAME" == "develop" ]; then docker compose -f docker-compose.dev.yml build; fi
+    - if [ "$CI_COMMIT_REF_NAME" == "develop" ]; then docker compose -f docker-compose.dev.yml push; fi
 
 deploy:
   stage: deploy
@@ -72,26 +53,39 @@ deploy:
     DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
   before_script:
     - echo "Setting up SSH credentials"
+    - apk update && apk add --no-cache openssh
     - mkdir -p ~/.ssh
     - echo "$HOST_PRIVATE_KEY_B64" | base64 --decode > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - echo "$HOST_URL" >> ~/.ssh/known_hosts
+    - ssh-keyscan -H "$HOST_URL" >> ~/.ssh/known_hosts
+
   script:
     - echo "Sending secrets to VPS and deploying application"
     - |
       ssh ${VPS_USER}@${HOST_URL} << EOF
-        mkdir -p /home/ubuntu/shared-notes
+        cd /home/ubuntu/
+        rm -rf template-node-react-ts
+        mkdir -p template-node-react-ts
+        cd template-node-react-ts
         echo "Decoding secrets and writing to file"
-        echo "POSTGRES_CONNECTION_STRING_DEV=\$(echo $POSTGRES_CONNECTION_STRING_DEV_B64 | base64 --decode)" >> /home/ubuntu/shared-notes/secrets.env
-        echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 --decode)" >> /home/ubuntu/shared-notes/secrets.env
-        chmod 600 /home/ubuntu/shared-notes/secrets.env
+        echo "POSTGRES_CONNECTION_STRING_DEV=\$(echo $POSTGRES_CONNECTION_STRING_DEV_B64 | base64 --decode)" >> .env
+        echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 --decode)" >> .env
+        echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 --decode)" >> .env
+        echo "FRONTEND_IMAGE=\$FRONTEND_IMAGE:$VERSION" >> .env
+        echo "BACKEND_IMAGE=\$BACKEND_IMAGE:$VERSION" >> .env
+        chmod 600 .env
 
-        echo "Pulling Docker images"
-        docker pull ${FRONTEND_IMAGE_NAME}:${VERSION}
-        docker pull ${BACKEND_IMAGE_NAME}:${VERSION}
-
-        echo "Deploying containers with Docker Compose"
-        docker-compose -f docker-compose.yml up -d --remove-orphans
+        if [ "$CI_COMMIT_REF_NAME" == "master" ]; then
+          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.yml pull;
+          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.yml up -d --remove-orphans;
+          else
+          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.dev.yml pull;
+          echo \$DEPLOYMENT_PASSWORD | sudo -S docker compose -f docker-compose.dev.yml up -d --remove-orphans;
+        fi
       EOF
-  only:
-    - main
+
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+      when: manual
+    - when: always
+
