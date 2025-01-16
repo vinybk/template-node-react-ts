@@ -1,6 +1,6 @@
 // button.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Button } from '../button';
+import { Button } from '../button.tsx';
 
 test('renders with default variant and size', () => {
   render(<Button>Click me</Button>);

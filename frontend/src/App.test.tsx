@@ -1,7 +1,7 @@
 // App.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import App from './App';
+import App from './App.js';
 
 // Mocking components
 jest.mock('@/pages/RoomPage', () => () => <div>Room Page Content</div>);

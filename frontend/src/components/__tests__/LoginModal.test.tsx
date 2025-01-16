@@ -1,6 +1,6 @@
 // LoginModal.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
-import LoginModal from '../LoginModal';
+import LoginModal from '../LoginModal.tsx';
 
 test('calls onRegister when register link is clicked', () => {
     const onRegister = jest.fn();
