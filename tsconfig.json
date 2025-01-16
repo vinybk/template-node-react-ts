@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "ESNext",
+      "moduleResolution": "NodeNext",
+      "strict": true,
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "skipLibCheck": true,
+      "baseUrl": ".",
+      "paths": {
+        "zod": ["node_modules/zod"]
+      }
+    },
+    "include": [],
+    "exclude": ["node_modules", "dist"],
+    "references": [
+      { "path": "./shared" },
+      { "path": "./frontend" },
+      { "path": "./backend" }
+    ]
+  }
+  
