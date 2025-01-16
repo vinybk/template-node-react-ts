@@ -20,7 +20,8 @@
     "passport-google-oauth20": "^2.0.0",
     "redis": "^4.7.0",
     "supertest": "^7.0.0",
-    "tsconfig-paths": "^4.2.0"
+    "tsconfig-paths": "^4.2.0",
+    "shared": "^1.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

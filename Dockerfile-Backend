@@ -13,8 +13,9 @@ WORKDIR ${repo_path}
 # Copy package files and install dependencies
 COPY ${backend_path}package*.json ./${backend_path}
 COPY ${shared_path}package*.json ./${shared_path}
-COPY package*.json ./
+COPY package*.json .
 RUN npm install
+RUN npm list
 
 # Copy all source code
 COPY ${backend_path} ./${backend_path}
@@ -22,7 +23,7 @@ COPY ${backend_path} ./${backend_path}
 # Copy shared resources
 COPY ${shared_path} ./${shared_path}
 
-RUN npm run build-backend  # Make sure theres a "build" script in package.json like "tsc"
+RUN npm run build-backend 
 
 # Expose port 5000 for the backend
 EXPOSE 5000

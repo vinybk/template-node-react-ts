@@ -12,8 +12,9 @@ WORKDIR ${repo_path}
 # Copy package files and install dependencies
 COPY ${frontend_path}package*.json ./${frontend_path}
 COPY ${shared_path}package*.json ./${shared_path}
-COPY package*.json ./
+COPY package*.json .
 RUN npm install
+RUN npm list
 
 # Copy all source code
 COPY ${frontend_path} ./${frontend_path}
