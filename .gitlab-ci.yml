@@ -14,9 +14,6 @@ cache:
   paths:
     - node_modules/
 
-before_script:
-  - echo $PERSONAL_ACCESS_TOKEN | docker login -u $GITLAB_USERNAME --password-stdin $CI_REGISTRY
-
 test:
   stage: test
   image: node:22-alpine
@@ -31,11 +28,14 @@ test:
     - develop
     - main
 
+
 build:
   stage: build
   image: docker:latest
   services:
     - docker:dind
+  before_script:
+    - echo $PERSONAL_ACCESS_TOKEN | docker login -u $GITLAB_USERNAME --password-stdin $CI_REGISTRY
   script:
     - echo "Building Docker images"
     - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then docker compose -f docker-compose.yml build; fi
