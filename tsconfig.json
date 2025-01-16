@@ -9,7 +9,8 @@
       "skipLibCheck": true,
       "baseUrl": ".",
       "paths": {
-        "zod": ["node_modules/zod"]
+        "zod": ["node_modules/zod"],
+        "@shared/*": ["./shared/*"]
       }
     },
     "include": [],

@@ -1,26 +1,15 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "types": [
-      "node",
-      "jest",
-      "@testing-library/jest-dom"
-    ],
     "jsx": "react-jsx",
-    "target": "ES2022",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"], 
-    "module": "esnext",
-    "moduleResolution": "node",
-    "allowImportingTsExtensions": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    "types": ["node", "jest", "@testing-library/jest-dom"],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/*"]
-
     }
   },
-  "include": ["src", "../shared"]
+  "include": ["src/**/*", "../shared/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

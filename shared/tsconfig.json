@@ -1,16 +1,9 @@
 {
-    "compilerOptions": {
-      "target": "es2022",
-      "module": "esnext",
-      "declaration": true,
-      "outDir": "./dist",
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "paths": {
-        "zod": ["../node_modules/zod"]
-      },
-    },
-    "include": ["**/*"]
-  }
-  
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*", "types/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

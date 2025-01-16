@@ -9,10 +9,6 @@
     "dev": "nodemon --watch src --ext ts --exec ts-node -r tsconfig-paths/register --legacy-watch src/server.ts",
     "build": "tsc"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "express": "^4.21.1",
     "express-session": "^1.18.1",
@@ -21,7 +17,7 @@
     "redis": "^4.7.0",
     "supertest": "^7.0.0",
     "tsconfig-paths": "^4.2.0",
-    "shared": "^1.0.0"
+    "shared": "file:../shared"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
@@ -33,11 +29,6 @@
     "@types/supertest": "^6.0.2",
     "nodemon": "^3.1.7",
     "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
-    "zod": "^3.23.8"
-  },
-  "peerDependencies": {
-    "zod": "^3.23.8"
+    "ts-node": "^10.9.2"
   }
 }
-

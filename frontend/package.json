@@ -25,7 +25,7 @@
     "tailwindcss-animate": "^1.0.7",
     "yjs": "^13.6.20",
     "zustand": "^5.0.0",
-    "shared": "^1.0.0"
+    "shared": "file:../shared"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
@@ -50,12 +50,6 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript-eslint": "^8.10.0",
-    "vite": "^5.4.9",
-    "zod": "^3.23.8"
-  },
-  "peerDependencies": {
-    "zod": "^3.23.8"
+    "vite": "^5.4.9"
   }
 }
-
- 
