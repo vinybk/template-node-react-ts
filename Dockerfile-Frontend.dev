@@ -6,9 +6,13 @@ ARG repo_path=/home/node/
 ARG build_path=frontend/
 ARG shared_path=shared/
 
-WORKDIR ${repo_path}${build_path}
+# Copy package files and install shared dependencies
+WORKDIR ${repo_path}${shared_path}
+COPY ${shared_path}package*.json ./
+RUN npm install
 
-# Copy package files and install dependencies
+# Copy package files and install frontend dependencies
+WORKDIR ${repo_path}${build_path}
 COPY ${build_path}package*.json ./
 RUN npm install
 
