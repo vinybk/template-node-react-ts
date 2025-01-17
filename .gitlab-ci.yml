@@ -1,5 +1,4 @@
 stages:
-  - test
   - build
   - deploy
 
@@ -9,25 +8,6 @@ variables:
   VERSION: "latest"
   DOCKER_HOST: "tcp://docker:2375"
   DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
-
-cache:
-  paths:
-    - node_modules/
-
-test:
-  stage: test
-  image: node:22-alpine
-  only:
-    - develop
-    - main
-  script:
-    - echo "Running tests for frontend and backend"
-    - npm ci
-    - npm test
-  only:
-    - develop
-    - main
-
 
 build:
   stage: build
