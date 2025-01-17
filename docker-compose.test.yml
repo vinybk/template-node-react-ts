@@ -1,13 +1,3 @@
-# # #
-#
-#
-#
-# Deprecated. The tests will run in the CI.
-#
-#
-#
-# # #
-
 services:
   frontend:
     build:

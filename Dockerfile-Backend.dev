@@ -1,29 +1,27 @@
 # Backend Dockerfile.dev
 
 # Use a Node.js image with TypeScript support
-FROM node:22-alpine
+FROM node:18-alpine
 
 ARG repo_path=/home/node/
-ARG backend_path=backend/
+ARG build_path=backend/
 ARG shared_path=shared/
 
-WORKDIR ${repo_path}
+WORKDIR ${repo_path}${build_path}
 
 # Copy package files and install dependencies
-COPY ${backend_path}package*.json ./${backend_path}
-COPY ${shared_path}package*.json ./${shared_path}
-COPY package*.json ./
+COPY ${build_path}package*.json ./
 RUN npm install
 
 # Copy all source code
-COPY ${backend_path} ./${backend_path}
+COPY ${build_path} .
 
 # Copy shared resources
-COPY ${shared_path} ./${shared_path}
+COPY ${shared_path} ${repo_path}${shared_path}
 
 # Expose port 5000 for the backend server
 EXPOSE 5000
 
 # Start the backend server in development mode with nodemon
-CMD ["npm", "run", "dev-backend", "test"]
+CMD ["npm", "run", "dev", "test"]
 

@@ -1,7 +1,7 @@
 services:
   frontend:
     build:
-      context: ./
+      context: .
       dockerfile: Dockerfile-Frontend.dev  # Consistent naming with production Dockerfile
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
@@ -11,8 +11,10 @@ services:
       - PORT=${FRONTEND_PORT:-3000}
       - CHOKIDAR_USEPOLLING=true
     volumes:
-      - ./:/home/node/
-    command: "npm run dev-frontend"
+      - ./frontend:/app
+      - ./shared:/shared
+      - /app/node_modules
+    command: "npm run dev"
     depends_on:
       - backend
     networks:
@@ -22,20 +24,17 @@ services:
       watch:
         - action: sync
           path: ./frontend/src
-          target: ./frontend/src
+          target: /app/src
           ignore:
+            - node_modules/
             - dist/
-        - action: rebuild
-          path: ./frontend/package.json
-        - action: rebuild
-          path: ./frontend/package-lock.json
         - action: sync
           path: ./shared
           target: /shared
         - action: rebuild
-          path: ./shared/package.json
+          path: ./frontend/package.json
         - action: rebuild
-          path: ./shared/package-lock.json
+          path: ./frontend/package-lock.json
 
   backend:
     build:
@@ -46,10 +45,11 @@ services:
     environment:
       - NODE_ENV=${BACKEND_NODE_ENV:-development}
       - PORT=${BACKEND_PORT:-5000}
-      - POSTGRES_CONNECTION_STRING=${POSTGRES_CONNECTION_STRING_DEV:?Missing dev Postgres connection string}
+      - POSTGRES_CONNECTION_STRING=${POSTGRES_CONNECTION_STRING:?Missing Postgres connection string}
     volumes:
-      - ./:/home/node/
-    command: "npm run dev-backend"
+      - ./backend:/app
+      - /app/node_modules
+    command: "npm run dev"
     networks:
       - app-network
 
@@ -57,18 +57,17 @@ services:
       watch:
         - action: sync
           path: ./backend/src
-          target: ./backend/src
-        - action: rebuild
-          path: ./backend/package.json
-        - action: rebuild
-          path: ./backend/package-lock.json
+          target: /app/src
+          ignore:
+            - node_modules/
+            - dist/
         - action: sync
           path: ./shared
           target: /shared
         - action: rebuild
-          path: ./shared/package.json
+          path: ./backend/package.json
         - action: rebuild
-          path: ./shared/package-lock.json
+          path: ./backend/package-lock.json
 
 networks:
   app-network:

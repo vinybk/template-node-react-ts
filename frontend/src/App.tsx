@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LoginModal from '@/components/LoginModal';
 
 // Lazy load RoomPage to load it in the background
-const RoomPage = React.lazy(() => import('@/pages/RoomPage.js'));
+const RoomPage = React.lazy(() => import('@/pages/RoomPage'));
 
 function App() {
   const [isLoginVisible, setIsLoginVisible] = useState(true);

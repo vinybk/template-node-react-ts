@@ -1,6 +1,6 @@
 // frontend/src/components/UserComponent.tsx
 
-import { UserType } from '@shared/types/schemas';
+import { UserType } from '@shared/types/schemas.ts';
 interface Props {
     user: UserType;
 }
