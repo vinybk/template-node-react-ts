@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
-import { Button } from '@/components/ui/button.tsx';
-import { Input } from '@/components/ui/input.tsx';
-import Text from '@/components/ui/text.tsx';
+import { Button } from '@/components/ui/button.js';
+import { Input } from '@/components/ui/input.js';
+import Text from '@/components/ui/text.js';
 
 type LoginModalProps = {
     isOpen: boolean;

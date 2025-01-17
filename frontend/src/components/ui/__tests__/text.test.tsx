@@ -1,6 +1,6 @@
 // text.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
-import Text from '../text.tsx';
+import Text from '../text.js';
 
 test('renders with body variant by default', () => {
     render(<Text>Body Text</Text>);

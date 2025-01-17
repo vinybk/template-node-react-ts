@@ -1,7 +1,7 @@
 // App.tsx
 import React, { useState, Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import LoginModal from '@/components/LoginModal.tsx';
+import LoginModal from '@/components/LoginModal.js';
 
 // Lazy load RoomPage to load it in the background
 const RoomPage = React.lazy(() => import('@/pages/RoomPage.tsx'));
