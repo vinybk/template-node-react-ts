@@ -1,7 +1,7 @@
 // RoomPage.test.tsx
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import RoomPage from '../RoomPage.js';
+import RoomPage from '../RoomPage';
 
 describe('RoomPage Component', () => {
   test('renders without crashing', () => {
