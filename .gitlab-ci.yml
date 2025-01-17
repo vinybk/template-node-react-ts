@@ -73,7 +73,7 @@ deploy:
   before_script:
     - echo "Setting up SSH credentials"
     - mkdir -p ~/.ssh
-    - echo "$HOST_PRIVATE_KEY_B64" | base64 --decode > ~/.ssh/id_rsa
+    - echo "$HOST_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - echo "$HOST_URL" >> ~/.ssh/known_hosts
   script:
@@ -82,8 +82,8 @@ deploy:
       ssh ${VPS_USER}@${HOST_URL} << EOF
         mkdir -p /home/ubuntu/shared-notes
         echo "Decoding secrets and writing to file"
-        echo "POSTGRES_CONNECTION_STRING_DEV=\$(echo $POSTGRES_CONNECTION_STRING_DEV_B64 | base64 --decode)" >> /home/ubuntu/shared-notes/secrets.env
-        echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 --decode)" >> /home/ubuntu/shared-notes/secrets.env
+        echo "POSTGRES_CONNECTION_STRING_DEV=\$(echo $POSTGRES_CONNECTION_STRING_DEV_B64 | base64 -d)" >> /home/ubuntu/shared-notes/secrets.env
+        echo "POSTGRES_CONNECTION_STRING_PROD=\$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 -d)" >> /home/ubuntu/shared-notes/secrets.env
         chmod 600 /home/ubuntu/shared-notes/secrets.env
 
         echo "Pulling Docker images"
