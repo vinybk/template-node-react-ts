@@ -9,9 +9,10 @@ const config = {
   verbose: true,
   testMatch: ['**/__tests__/**/*.test.[jt]s?(x)', '**/?(*.)+(spec|test).[tj]s?(x)'],
   moduleNameMapper: {
-    // Map .js imports to .tsx files for tests
+    // Use paths from tsconfig.json
     ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
-    '^(.*)\\.js$': '$1.tsx',
+    // Map .js imports to .tsx files, but only within your project
+    '^(src/.+)\\.js$': '<rootDir>/$1.tsx',
   },
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest', // Ensure ts-jest is set up for TypeScript
