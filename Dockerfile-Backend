@@ -1,8 +1,7 @@
 # Backend Dockerfile
 
 # Use a Node.js image
-FROM node:18-alpine
-
+FROM node:22-alpine
 
 ARG repo_path=/home/node/
 ARG build_path=backend/
