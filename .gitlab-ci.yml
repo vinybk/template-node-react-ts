@@ -46,20 +46,6 @@ build:
 
 
     
-    - INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
-    - if [[ -z $INCREMENT ]]; then
-          INCREMENT="increment-patch"
-      fi
-    - if [[ "$CI_COMMIT_BRANCH" == "main" && "$INCREMENT" == "increment-major" ]]; then
-          MAJOR=$((MAJOR + 1))
-          MINOR=0
-          PATCH=0
-      elif [[ "$INCREMENT" == "increment-minor" ]]; then
-          MINOR=$((MINOR + 1))
-          PATCH=0
-      else
-          PATCH=$((PATCH + 1))
-      fi
     - NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
     - export VERSION=$NEW_VERSION
 
