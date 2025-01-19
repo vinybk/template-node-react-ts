@@ -34,13 +34,9 @@ build:
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: "tcp://docker:2375"
-    DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
   before_script:
     - echo $CI_JOB_TOKEN | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
-    - echo "Fetching the latest tag for versioning"
     - git fetch --tags
     - LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
     - VERSION=${LATEST_TAG#v} # Strip 'v' from tag
@@ -51,24 +47,19 @@ build:
     # Staging branch always uses the "staging" tag
     - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then
         export VERSION="staging"
-        echo "Using staging tag for Docker images $VERSION"
       fi
 
     # Main branch uses versioning logic
     - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-        echo "Fetching merge request details from GitLab API"
         curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" \
           "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" \
           -o merge_request.json
 
-        echo "Parsing increment label from merge request"
         INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
         if [[ -z $INCREMENT ]]; then
-          echo "No increment label found, defaulting to patch"
           INCREMENT="increment-patch"
         fi
 
-        echo "Applying version increment $INCREMENT"
         if [[ $INCREMENT == "increment-major" ]]; then
           MAJOR=$((MAJOR + 1))
           MINOR=0
@@ -81,12 +72,10 @@ build:
         fi
 
         NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-        echo "New version $NEW_VERSION"
         export VERSION=$NEW_VERSION
       fi
 
     # Build and push Docker images
-    - echo "Building Docker images with tag $VERSION"
     - docker build -t ${FRONTEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Frontend .
     - docker build -t ${BACKEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Backend .
     - docker push ${FRONTEND_IMAGE_NAME}:${VERSION}
@@ -99,9 +88,25 @@ build:
         docker push ${FRONTEND_IMAGE_NAME}:latest
         docker push ${BACKEND_IMAGE_NAME}:latest
       fi
+
+    # Deploy to VPS
+    - apk add --no-cache openssh
+    - mkdir -p ~/.ssh
+    - echo "$HOST_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H "$HOST_URL" >> ~/.ssh/known_hosts
+    - scp docker-compose.* .env $VPS_USER@$HOST_URL:/home/ubuntu/shared-notes/
+    - ssh -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "
+        cd /home/ubuntu/shared-notes &&
+        set -a && source .env && set +a &&
+        docker pull $FRONTEND_IMAGE_NAME:$VERSION &&
+        docker pull $BACKEND_IMAGE_NAME:$VERSION &&
+        docker compose -f docker-compose.yml up -d --remove-orphans
+      "
   only:
     - staging
     - main
+
 
 
 
