@@ -44,12 +44,8 @@ build:
     - MINOR=$(echo $VERSION | cut -d. -f2)
     - PATCH=$(echo $VERSION | cut -d. -f3)
 
-    # Main branch uses versioning logic
-    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-      curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" \
-        "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" \
-        -o merge_request.json
-      fi
+
+    
     - INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
     - if [[ -z $INCREMENT ]]; then
           INCREMENT="increment-patch"
@@ -80,21 +76,6 @@ build:
         docker push ${FRONTEND_IMAGE_NAME}:latest
         docker push ${BACKEND_IMAGE_NAME}:latest
       fi
-
-    # Deploy to VPS
-    - apk add --no-cache openssh
-    - mkdir -p ~/.ssh
-    - echo "$HOST_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H "$HOST_URL" >> ~/.ssh/known_hosts
-    - scp docker-compose.* .env $VPS_USER@$HOST_URL:/home/ubuntu/shared-notes/
-    - ssh -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "
-        cd /home/ubuntu/shared-notes &&
-        set -a && source .env && set +a &&
-        docker pull $FRONTEND_IMAGE_NAME:$VERSION &&
-        docker pull $BACKEND_IMAGE_NAME:$VERSION &&
-        docker compose -f docker-compose.yml up -d --remove-orphans
-      "
   only:
     - staging
     - main
