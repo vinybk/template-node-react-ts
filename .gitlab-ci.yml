@@ -44,11 +44,6 @@ build:
     - MINOR=$(echo $VERSION | cut -d. -f2)
     - PATCH=$(echo $VERSION | cut -d. -f3)
 
-    # Staging branch always uses the "staging" tag
-    - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then
-        export VERSION="staging"
-      fi
-
     # Main branch uses versioning logic
     - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
       curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" \
