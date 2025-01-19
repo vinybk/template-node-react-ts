@@ -39,12 +39,7 @@ build:
   script:
     - git fetch --tags
     - LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
-    - VERSION="0.0.0" # Strip 'v' from tag
-    - MAJOR=$(echo $VERSION | cut -d. -f1)
-    - MINOR=$(echo $VERSION | cut -d. -f2)
-    - PATCH=$(echo $VERSION | cut -d. -f3)
 
-# Staging branch always uses the "staging" tag
     - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then
         export VERSION="staging"
       fi
@@ -53,13 +48,11 @@ build:
     - NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
     - export VERSION=$NEW_VERSION
 
-    # Build and push Docker images
     - docker build -t ${FRONTEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Frontend .
     - docker build -t ${BACKEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Backend .
     - docker push ${FRONTEND_IMAGE_NAME}:${VERSION}
     - docker push ${BACKEND_IMAGE_NAME}:${VERSION}
 
-    # Push 'latest' tag only for the main branch
     - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
         docker tag ${FRONTEND_IMAGE_NAME}:${VERSION} ${FRONTEND_IMAGE_NAME}:latest
         docker tag ${BACKEND_IMAGE_NAME}:${VERSION} ${BACKEND_IMAGE_NAME}:latest
