@@ -1,0 +1,37 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    # Install SSH tools and dependencies
+    - apk update && apk add --no-cache openssh sshpass
+
+    # Create the SSH directory
+    - mkdir -p ~/.ssh
+
+    # Decode the Base64 private key and save it to ~/.ssh/id_rsa
+    - echo "$HOST_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa  # Ensure proper permissions for the private key
+
+    # Add the VPS to known_hosts to avoid authenticity prompts
+    - ssh-keyscan -H "$HOST_URL" >> ~/.ssh/known_hosts
+
+    # Start ssh-agent and add the private key with the passphrase
+    - eval $(ssh-agent -s)
+    - echo "$HOST_PASSPHRASE" | ssh-add ~/.ssh/id_rsa
+
+  script:
+    # Test SSH connection to the VPS
+    - echo "Connecting to VPS..."
+    - ssh $VPS_USER@$HOST_URL "
+      echo 'Connected to VPS!';
+      uname -a;
+      uptime;
+      "
+
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"' # Run only for the main branch
