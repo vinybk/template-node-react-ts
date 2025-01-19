@@ -37,11 +37,7 @@ build:
   before_script:
     - echo $CI_JOB_TOKEN | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
-
-# Staging branch always uses the "staging" tag
-    - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then
-        export VERSION="staging"
-      fi
+    - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then export VERSION="staging"; fi
     
     # Build and push Docker images
     - docker build -t ${FRONTEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Frontend .
