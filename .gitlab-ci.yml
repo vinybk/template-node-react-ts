@@ -51,29 +51,26 @@ build:
 
     # Main branch uses versioning logic
     - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-        curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" \
-          "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" \
-          -o merge_request.json
-
-        INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
-        if [[ -z $INCREMENT ]]; then
+      curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" \
+        "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" \
+        -o merge_request.json
+      fi
+    - INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
+    - if [[ -z $INCREMENT ]]; then
           INCREMENT="increment-patch"
-        fi
-
-        if [[ $INCREMENT == "increment-major" ]]; then
+      fi
+    - if [[ "$CI_COMMIT_BRANCH" == "main" && "$INCREMENT" == "increment-major" ]]; then
           MAJOR=$((MAJOR + 1))
           MINOR=0
           PATCH=0
-        elif [[ $INCREMENT == "increment-minor" ]]; then
+      elif [[ "$INCREMENT" == "increment-minor" ]]; then
           MINOR=$((MINOR + 1))
           PATCH=0
-        else
+      else
           PATCH=$((PATCH + 1))
-        fi
-
-        NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-        export VERSION=$NEW_VERSION
       fi
+    - NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+    - export VERSION=$NEW_VERSION
 
     # Build and push Docker images
     - docker build -t ${FRONTEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Frontend .
