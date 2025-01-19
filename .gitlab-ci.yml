@@ -28,7 +28,6 @@ test:
     - npm test
   only:
     - staging
-    - main
 
 build:
   stage: build
@@ -51,40 +50,40 @@ build:
 
     # Staging branch always uses the "staging" tag
     - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then
-        export VERSION="staging";
-        echo "Using staging tag for Docker images $VERSION";
+        export VERSION="staging"
+        echo "Using staging tag for Docker images $VERSION"
       fi
 
     # Main branch uses versioning logic
     - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-        echo "Fetching merge request details from GitLab API";
+        echo "Fetching merge request details from GitLab API"
         curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" \
           "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" \
-          -o merge_request.json;
+          -o merge_request.json
 
-        echo "Parsing increment label from merge request";
-        INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")');
+        echo "Parsing increment label from merge request"
+        INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
         if [[ -z $INCREMENT ]]; then
-          echo "No increment label found, defaulting to patch";
-          INCREMENT="increment-patch";
-        fi;
+          echo "No increment label found, defaulting to patch"
+          INCREMENT="increment-patch"
+        fi
 
-        echo "Applying version increment $INCREMENT";
+        echo "Applying version increment $INCREMENT"
         if [[ $INCREMENT == "increment-major" ]]; then
-          MAJOR=$((MAJOR + 1));
-          MINOR=0;
-          PATCH=0;
+          MAJOR=$((MAJOR + 1))
+          MINOR=0
+          PATCH=0
         elif [[ $INCREMENT == "increment-minor" ]]; then
-          MINOR=$((MINOR + 1));
-          PATCH=0;
+          MINOR=$((MINOR + 1))
+          PATCH=0
         else
-          PATCH=$((PATCH + 1));
-        fi;
+          PATCH=$((PATCH + 1))
+        fi
 
-        NEW_VERSION="v$MAJOR.$MINOR.$PATCH";
-        echo "New version $NEW_VERSION";
-        export VERSION=$NEW_VERSION;
-      fi'
+        NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+        echo "New version $NEW_VERSION"
+        export VERSION=$NEW_VERSION
+      fi
 
     # Build and push Docker images
     - echo "Building Docker images with tag $VERSION"
@@ -95,14 +94,15 @@ build:
 
     # Push 'latest' tag only for the main branch
     - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-        docker tag ${FRONTEND_IMAGE_NAME}:${VERSION} ${FRONTEND_IMAGE_NAME}:latest;
-        docker tag ${BACKEND_IMAGE_NAME}:${VERSION} ${BACKEND_IMAGE_NAME}:latest;
-        docker push ${FRONTEND_IMAGE_NAME}:latest;
-        docker push ${BACKEND_IMAGE_NAME}:latest;
+        docker tag ${FRONTEND_IMAGE_NAME}:${VERSION} ${FRONTEND_IMAGE_NAME}:latest
+        docker tag ${BACKEND_IMAGE_NAME}:${VERSION} ${BACKEND_IMAGE_NAME}:latest
+        docker push ${FRONTEND_IMAGE_NAME}:latest
+        docker push ${BACKEND_IMAGE_NAME}:latest
       fi
   only:
     - staging
     - main
+
 
 
 
