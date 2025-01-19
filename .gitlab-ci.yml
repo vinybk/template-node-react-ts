@@ -44,7 +44,11 @@ build:
     - MINOR=$(echo $VERSION | cut -d. -f2)
     - PATCH=$(echo $VERSION | cut -d. -f3)
 
-
+# Staging branch always uses the "staging" tag
+    - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then
+        export VERSION="staging"
+      fi
+    
     
     - NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
     - export VERSION=$NEW_VERSION
