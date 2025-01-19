@@ -58,7 +58,7 @@ test:
     PATCH=$((PATCH + 1));
   fi;
   NEW_VERSION="v$MAJOR.$MINOR.$PATCH";
-  echo "New version: $NEW_VERSION";
+  echo "New version $NEW_VERSION";
 
 build:
   stage: build
