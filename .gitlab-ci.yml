@@ -27,7 +27,8 @@ test:
     - npm ci
     - npm test
   only:
-    - never
+    - main
+    - staging
 
 build:
   stage: build
@@ -67,6 +68,7 @@ build:
 
   only:
     - main
+    - staging
     
     
 deploy:
@@ -125,3 +127,4 @@ deploy:
 
   only:
     - main
+    - staging
