@@ -45,7 +45,8 @@ build:
     - PATCH=$(echo $VERSION | cut -d. -f3)
 
     # Main branch uses versioning logic
-    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then apk add --no-cache curl jq && curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" -o merge_request.json && INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "major" or . == "minor" or . == "patch")'); fi
+    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then apk add --no-cache curl jq && echo "Fetching merge request details..." && curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" -o merge_request.json && echo "Merge request details:" && cat merge_request.json && INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "major" or . == "minor" or . == "patch")' || echo "patch") && echo "Detected increment:$INCREMENT"; fi
+
     - if [[ -z $INCREMENT ]]; then INCREMENT="patch"; fi
     - if [[ "$CI_COMMIT_BRANCH" == "main" && "$INCREMENT" == "major" ]]; then MAJOR=$((MAJOR + 1)) MINOR=0 PATCH=0; elif [[ "$INCREMENT" == "minor" ]]; then MINOR=$((MINOR + 1)) PATCH=0; else PATCH=$((PATCH + 1)); fi; echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
     
@@ -66,7 +67,6 @@ build:
 
   only:
     - main
-    - staging
     
     
 deploy:
@@ -124,5 +124,4 @@ deploy:
 
 
   only:
-    - staging
     - main
