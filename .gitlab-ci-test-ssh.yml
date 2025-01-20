@@ -1,37 +1,59 @@
 stages:
-  - deploy
+  - sshtest
 
-deploy:
-  stage: deploy
+sshtest:
+  stage: sshtest
   image: docker:latest
   services:
     - docker:dind
   before_script:
-    # Install SSH tools and dependencies
+    # Install SSH tools
+    - echo "Updating APK packages and installing SSH tools"
     - apk update && apk add --no-cache openssh sshpass
 
+    # Debug: Verify installation of tools
+    - echo "Checking SSH version"
+    - ssh -V || echo "SSH not installed correctly"
+
     # Create the SSH directory
+    - echo "Setting up SSH directory"
     - mkdir -p ~/.ssh
 
-    # Decode the Base64 private key and save it to ~/.ssh/id_rsa
-    - echo "$HOST_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa  # Ensure proper permissions for the private key
+    # Debug: Show environment variables
+    - echo "VPS_USER=$VPS_USER"
+    - echo "HOST_URL=$HOST_URL"
 
-    # Add the VPS to known_hosts to avoid authenticity prompts
+    # Decode the Base64 private key and save it to ~/.ssh/id_rsa
+    - echo "Decoding private key"
+    - echo "$HOST_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
+
+    # Debug: Verify the key file
+    - echo "Private key file content (first few lines):"
+    - head -n 5 ~/.ssh/id_rsa || echo "Failed to create private key"
+
+    # Set proper permissions for the private key
+    - chmod 600 ~/.ssh/id_rsa
+
+    # Add the VPS host to known_hosts to avoid authenticity prompts
+    - echo "Adding VPS host to known_hosts"
     - ssh-keyscan -H "$HOST_URL" >> ~/.ssh/known_hosts
 
+    # Debug: Show known_hosts content
+    - echo "Known hosts file content:"
+    - cat ~/.ssh/known_hosts
+
     # Start ssh-agent and add the private key with the passphrase
+    - echo "Starting ssh-agent and adding private key"
     - eval $(ssh-agent -s)
-    - echo "$HOST_PASSPHRASE" | ssh-add ~/.ssh/id_rsa
+    - echo "$HOST_PASSPHRASE" | ssh-add ~/.ssh/id_rsa || echo "Failed to add private key"
+
+    # Debug: List identities in the agent
+    - echo "Listing identities added to ssh-agent"
+    - ssh-add -l
 
   script:
-    # Test SSH connection to the VPS
-    - echo "Connecting to VPS..."
-    - ssh $VPS_USER@$HOST_URL "
-      echo 'Connected to VPS!';
-      uname -a;
-      uptime;
-      "
+    # Debug: Test SSH connection
+    - echo "Testing SSH connection to VPS..."
+    - ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "echo 'Connected to VPS!' && uname -a && uptime" || echo "SSH connection failed"
 
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "main"' # Run only for the main branch
+

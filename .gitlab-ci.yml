@@ -4,8 +4,8 @@ stages:
   - deploy
 
 variables:
-  FRONTEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/sharednotes-frontend"
-  BACKEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/sharednotes-backend"
+  FRONTEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/template-frontend"
+  BACKEND_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/template-backend"
   DOCKER_HOST: "tcp://docker:2375"
   DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
 
@@ -27,7 +27,7 @@ test:
     - npm ci
     - npm test
   only:
-    - staging
+    - never
 
 build:
   stage: build
@@ -44,25 +44,16 @@ build:
     - MINOR=$(echo $VERSION | cut -d. -f2)
     - PATCH=$(echo $VERSION | cut -d. -f3)
 
-# Staging branch always uses the "staging" tag
-    - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then export VERSION="staging"; fi
     # Main branch uses versioning logic
-    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then apk add --no-cache curl && curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" -o merge_request.json; fi
-    - INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
-    - if [[ -z $INCREMENT ]]; then INCREMENT="increment-patch"; fi
-    - if [[ "$CI_COMMIT_BRANCH" == "main" && "$INCREMENT" == "increment-major" ]]; then
-          MAJOR=$((MAJOR + 1))
-          MINOR=0
-          PATCH=0
-      elif [[ "$INCREMENT" == "increment-minor" ]]; then
-          MINOR=$((MINOR + 1))
-          PATCH=0
-      else
-          PATCH=$((PATCH + 1))
-      fi
+    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then apk add --no-cache curl jq && curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" -o merge_request.json && INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "major" or . == "minor" or . == "patch")'); fi
+    - if [[ -z $INCREMENT ]]; then INCREMENT="patch"; fi
+    - if [[ "$CI_COMMIT_BRANCH" == "main" && "$INCREMENT" == "major" ]]; then MAJOR=$((MAJOR + 1)) MINOR=0 PATCH=0; elif [[ "$INCREMENT" == "minor" ]]; then MINOR=$((MINOR + 1)) PATCH=0; else PATCH=$((PATCH + 1)); fi; echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
     
     - NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
     - export VERSION=$NEW_VERSION
+    
+    # Staging branch always uses the "staging" tag
+    - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then export VERSION="staging"; fi
 
     # Build and push Docker images
     - docker build -t ${FRONTEND_IMAGE_NAME}:${VERSION} -f ./Dockerfile-Frontend .
@@ -71,30 +62,18 @@ build:
     - docker push ${BACKEND_IMAGE_NAME}:${VERSION}
 
     # Push 'latest' tag only for the main branch
-    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-        docker tag ${FRONTEND_IMAGE_NAME}:${VERSION} ${FRONTEND_IMAGE_NAME}:latest
-        docker tag ${BACKEND_IMAGE_NAME}:${VERSION} ${BACKEND_IMAGE_NAME}:latest
-        docker push ${FRONTEND_IMAGE_NAME}:latest
-        docker push ${BACKEND_IMAGE_NAME}:latest
-      fi
+    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then docker tag ${FRONTEND_IMAGE_NAME}:${VERSION} ${FRONTEND_IMAGE_NAME}:latest && docker tag ${BACKEND_IMAGE_NAME}:${VERSION} ${BACKEND_IMAGE_NAME}:latest && docker push ${FRONTEND_IMAGE_NAME}:latest && docker push ${BACKEND_IMAGE_NAME}:latest && echo "Latest tags pushed"; fi
+
   only:
-    - staging
     - main
-
-
-
-
-
+    - staging
+    
+    
 deploy:
   stage: deploy
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: "tcp://docker:2375"
-    DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker-in-Docker
-  needs:
-    - build
   before_script:
     # Install SSH tools and create the .ssh directory
     - apk update && apk add --no-cache openssh sshpass
@@ -112,27 +91,38 @@ deploy:
     - echo "$HOST_PASSPHRASE" | ssh-add ~/.ssh/id_rsa
 
   script:
-    # Prepare the environment variables for deployment
-    - echo "Preparing environment variables"
-    - echo "POSTGRES_CONNECTION_STRING_DEV=$(echo $POSTGRES_CONNECTION_STRING_DEV_B64 | base64 -d)" > .env
-    - echo "POSTGRES_CONNECTION_STRING_PROD=$(echo $POSTGRES_CONNECTION_STRING_PROD_B64 | base64 -d)" >> .env
-    - echo "VERSION=$VERSION" >> .env
+    # Test the SSH connection
+    - echo "Testing connection to VPS"
+    - ssh $VPS_USER@$HOST_URL "echo 'SSH connection successful'"
 
-    # Copy .env and docker-compose files to the remote server
-    - echo "Copying deployment files to VPS"
-    - scp .env docker-compose.* $VPS_USER@$HOST_URL:/home/ubuntu/shared-notes/
+    # Creating .env file
+    - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then echo "FRONTEND_PORT=3001" > .env && echo "BACKEND_PORT=5001" >> .env && echo "POSTGRES_CONNECTION_STRING=$POSTGRES_CONNECTION_STRING_STAGE" >> .env && echo "FRONTEND_IMAGE=${FRONTEND_IMAGE_NAME}:staging" >> .env && echo "BACKEND_IMAGE=${BACKEND_IMAGE_NAME}:staging" >> .env; else echo "FRONTEND_PORT=3000" > .env && echo "BACKEND_PORT=5000" >> .env && echo "POSTGRES_CONNECTION_STRING=$POSTGRES_CONNECTION_STRING_PROD" >> .env && echo "FRONTEND_IMAGE=${FRONTEND_IMAGE_NAME}:latest" >> .env && echo "BACKEND_IMAGE=${BACKEND_IMAGE_NAME}:latest" >> .env; fi
+
+    # Ensure the target directory exists on the remote server
+    - ssh $VPS_USER@$HOST_URL "mkdir -p /home/$VPS_USER/$CI_PROJECT_NAME"
+
+    # Copy the environment and docker-compose files to the target directory
+    - scp .env docker-compose.yml $VPS_USER@$HOST_URL:/home/$VPS_USER/$CI_PROJECT_NAME/
 
     # Connect to the VPS and deploy the application
     - echo "Deploying application"
-    - ssh -v -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "
-      cd /home/ubuntu/shared-notes &&
-      set -a && source .env && set +a &&
-      echo 'Pulling Docker images' &&
-      docker pull $FRONTEND_IMAGE_NAME:$VERSION &&
-      docker pull $BACKEND_IMAGE_NAME:$VERSION &&
-      echo 'Deploying containers with Docker Compose' &&
-      docker compose -f docker-compose.yml up -d --remove-orphans
+    - ssh -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "
+        cd /home/$VPS_USER/$CI_PROJECT_NAME &&
+        set -a && source .env && set +a &&
+        echo 'Debugging .env file:' &&
+        cat .env &&
+        echo 'Extracted FRONTEND_IMAGE:' &&
+        grep FRONTEND_IMAGE .env | cut -d '=' -f2 &&
+        echo 'Extracted BACKEND_IMAGE:' &&
+        grep BACKEND_IMAGE .env | cut -d '=' -f2 &&
+        docker pull \$(grep FRONTEND_IMAGE .env | cut -d '=' -f2) &&
+        docker pull \$(grep BACKEND_IMAGE .env | cut -d '=' -f2) &&
+        docker compose -f docker-compose.yml up -d --remove-orphans
       "
+
+    - ssh $VPS_USER@$HOST_URL "docker ps"
+
+
   only:
     - staging
     - main

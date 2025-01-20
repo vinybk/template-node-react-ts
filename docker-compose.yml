@@ -2,12 +2,12 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    image: vinbrun/sharednotes-frontend:latest
+      dockerfile: Dockerfile-Frontend
+    image: ${FRONTEND_IMAGE}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     environment:
-      - VITE_API_URL=http://backend:5000
+      - VITE_API_URL=http://backend:{BACKEND_PORT:-5000}
       - NODE_ENV=production
     restart: always
     networks:
@@ -21,8 +21,8 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    image: vinbrun/sharednotes-backend:latest
+      dockerfile: Dockerfile-Backend
+    image: ${BACKEND_IMAGE}
     ports:
       - "${BACKEND_PORT:-5000}:5000"
     environment:
@@ -33,7 +33,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-5000}/health"]
       interval: 30s
       timeout: 10s
       retries: 5
