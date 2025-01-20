@@ -47,7 +47,7 @@ build:
 # Staging branch always uses the "staging" tag
     - if [[ "$CI_COMMIT_BRANCH" == "staging" ]]; then export VERSION="staging"; fi
     # Main branch uses versioning logic
-    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" -o merge_request.json; fi
+    - if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then apk add --no-cache curl && curl --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID" -o merge_request.json; fi
     - INCREMENT=$(cat merge_request.json | jq -r '.labels[] | select(. == "increment-major" or . == "increment-minor" or . == "increment-patch")')
     - if [[ -z $INCREMENT ]]; then INCREMENT="increment-patch"; fi
     - if [[ "$CI_COMMIT_BRANCH" == "main" && "$INCREMENT" == "increment-major" ]]; then
