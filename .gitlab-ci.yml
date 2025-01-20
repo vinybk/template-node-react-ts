@@ -111,19 +111,7 @@ deploy:
 
     # Connect to the VPS and deploy the application
     - echo "Deploying application"
-    - ssh -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "
-        cd /home/$VPS_USER/$CI_PROJECT_NAME &&
-        set -a && source .env && set +a &&
-        echo 'Debugging .env file:' &&
-        cat .env &&
-        echo 'Extracted FRONTEND_IMAGE:' &&
-        grep FRONTEND_IMAGE .env | cut -d '=' -f2 &&
-        echo 'Extracted BACKEND_IMAGE:' &&
-        grep BACKEND_IMAGE .env | cut -d '=' -f2 &&
-        docker pull \$(grep FRONTEND_IMAGE .env | cut -d '=' -f2) &&
-        docker pull \$(grep BACKEND_IMAGE .env | cut -d '=' -f2) &&
-        docker compose -f docker-compose.yml up -d
-      "
+    - ssh -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "cd /home/$VPS_USER/$CI_PROJECT_NAME && set -a && source .env && set +a && echo 'Debugging .env file:' && cat .env && echo 'Extracted FRONTEND_IMAGE:' && grep FRONTEND_IMAGE .env | cut -d '=' -f2 && echo 'Extracted BACKEND_IMAGE:' && grep BACKEND_IMAGE .env | cut -d '=' -f2 && docker pull \$(grep FRONTEND_IMAGE .env | cut -d '=' -f2) && docker pull \$(grep BACKEND_IMAGE .env | cut -d '=' -f2) && if [[ \"$CI_COMMIT_BRANCH\" == \"staging\" ]]; then docker compose -f docker-compose.staging.yml up -d; else docker compose -f docker-compose.production.yml up -d; fi"
 
     - ssh $VPS_USER@$HOST_URL "docker ps"
 
