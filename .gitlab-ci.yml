@@ -106,6 +106,9 @@ deploy:
     # Copy the environment and docker-compose files to the target directory
     - scp .env docker-compose.yml $VPS_USER@$HOST_URL:/home/$VPS_USER/$CI_PROJECT_NAME/
 
+    # Create specific composes
+    - ssh $VPS_USER@$HOST_URL "if [[ \"$CI_COMMIT_BRANCH\" == \"staging\" ]]; then mv /home/$VPS_USER/$CI_PROJECT_NAME/docker-compose.yml /home/$VPS_USER/$CI_PROJECT_NAME/docker-compose.staging.yml; else mv /home/$VPS_USER/$CI_PROJECT_NAME/docker-compose.yml /home/$VPS_USER/$CI_PROJECT_NAME/docker-compose.production.yml; fi"
+
     # Connect to the VPS and deploy the application
     - echo "Deploying application"
     - ssh -i ~/.ssh/id_rsa $VPS_USER@$HOST_URL "
