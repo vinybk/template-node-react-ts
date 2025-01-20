@@ -117,7 +117,7 @@ deploy:
         grep BACKEND_IMAGE .env | cut -d '=' -f2 &&
         docker pull \$(grep FRONTEND_IMAGE .env | cut -d '=' -f2) &&
         docker pull \$(grep BACKEND_IMAGE .env | cut -d '=' -f2) &&
-        docker compose -f docker-compose.yml up -d --remove-orphans
+        docker compose -f docker-compose.yml up -d
       "
 
     - ssh $VPS_USER@$HOST_URL "docker ps"
